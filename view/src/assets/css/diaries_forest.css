@@ -1,0 +1,221 @@
+* {
+    list-style: none;
+    text-decoration: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.wrap {
+    min-width: 1100px;
+    min-height: 974px;
+}
+
+.wrap .forest {
+    display: flex;
+}
+
+.wrap .forest__question {
+    width: 40px;
+    height: 190px;
+    background-color: #E8F3DA;
+    margin-top: 52px;
+    border-radius: 0px 20px 20px 0px;
+}
+
+.wrap .forest__question-image {
+    height: 130px;
+    display: flex;
+    margin: auto;
+    margin-top: 28px;
+}
+
+.wrap .forest__diary {
+    display: flex;
+    margin: auto;
+    flex-direction: column;
+    align-items: center;
+}
+
+.wrap .forest__diary-tree {
+    height: 60px;
+    margin-bottom: 12px;
+}
+
+.wrap .forest__diary-title {
+    font-size: 32px;
+    font-family: "Noto Sans", sans-serif;
+    font-weight: 700;
+    font-style: bold;
+    color: #7E9660;
+    margin-bottom: 20px;
+}
+
+.wrap .forest__diary-date {
+    width: 566px;
+    height: 40px;
+    margin-bottom: 27px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.wrap .forest__diary-date-arrow {
+    width: 20px;
+    height: 20px;
+    margin-top: 10px;
+}
+
+.wrap .forest__diary-date-container {
+    width: 468px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.wrap .forest__diary-date-round {
+    width: 40px;
+    height: 40px;
+    background-color: #E8F3DA;
+    border-radius: 20px;
+    display : flex;
+    justify-content : center;
+    align-items : center;
+    font-family: "Noto Sans", sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #9e9e9e;
+}
+
+.wrap .forest__diary-date-round--today {
+    background-color: #9FC393;
+    color: #ffffff;
+}
+
+.wrap .forest__diary-title-edit {
+    width: 591px;
+    height: 33px;
+    color: #C6C9CE;
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 60px;
+    line-height: 20px;
+    font-family: "Noto Sans KR", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    border-style: solid;
+    border-width: 0 0 1px;
+    border-color: #99B477;
+    outline: none;
+}
+
+.wrap .forest__diary-actions {
+    width: 930px;
+    height: 43px;
+    margin-bottom: 23px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.wrap .forest__diary-actions-reveal {
+    width: 159px;
+    height: 30px;
+    background-color: #F5F5F5;
+    border-radius: 10px;
+    margin-right: 13px;
+    display: flex;
+    justify-content: space-between;
+    padding: 6px;
+}
+
+.wrap .forest__diary-actions-reveal-btn {
+    height: 18px;
+    background-color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 600;
+    color: #7D7D7D;
+    border-radius: 5px;
+    display : flex;
+    justify-content : center;
+    padding-top: 2px;
+}
+
+.wrap .forest__diary-actions-reveal-btn--only {
+    width: 42px;
+}
+
+.wrap .forest__diary-actions-reveal-btn--subscribe {
+    width: 53px;
+}
+
+.wrap .forest__diary-actions-reveal-btn--all {
+    width: 43px;
+}
+
+.wrap .forest__diary-actions-reveal-btn--selected {
+    background-color: #E8E6E6;
+    color: #7D7D7D;
+}
+
+.wrap .forest__diary-submit {
+    width: 55px;
+    height: 30px;
+    background-color: #9FC393;
+    margin-right: 4px;
+    border-radius: 100px;
+    display : flex;
+    justify-content : center;
+    align-items : center;
+    font-size: 10px;
+    color: #ffffff;
+}
+
+.wrap .forest__diary-submit:hover {
+    background-color: #D6E8C0;
+}
+
+.wrap .forest__diary-texts {
+    width: 930px;
+    height: 492px;
+    border-style : solid;
+    border-width: 1px;
+    border-color: #99B477;
+    margin-bottom: 50px;
+}
+
+/* .forest__diary-texts {
+    width: 500px;
+    height: 200px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+} */
+  
+/* .forest__diary-texts::-webkit-scrollbar {
+    width: 10px;  
+}
+
+.wrap .forest__diary-texts::-webkit-scrollbar-thumb {
+    height: 30%; 
+    background: #C1C1C1;
+}
+  
+.wrap .forest__diary-texts::-webkit-scrollbar-track {
+    background: #F1F1F1;
+} */
+
+.wrap .forest__diary-texts p {
+    font-size: large;
+}
+
+/* 다이어리 버튼 색 다르게 */
+.wrap .menu .button #diary {
+    height: 29px;
+    border-radius: 22.5px;
+    background-color: #ffffff;
+    color: #2C2C2C;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 15px;
+    box-shadow: 0px 4px 4px #B8B8B8;
+}

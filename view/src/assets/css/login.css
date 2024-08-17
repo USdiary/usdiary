@@ -1,0 +1,98 @@
+*{
+    list-style: none;
+    text-decoration: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.wrap {
+    min-width: 1100px;
+    min-height: 550px;
+}
+
+.menu {
+    display: flex;
+    justify-content: space-between;
+    height: 86.56px;
+}
+
+.menu .logo {
+    margin-top: 17px;
+    margin-left: 14px;
+}
+
+.menu .logo img {
+    width: 90px;
+}
+
+.menu .logo .logo_earth {
+    position: absolute;
+    display: none;
+}
+
+.menu .logo:hover .logo_earth {
+    display: block;
+}
+
+.menu .logo:hover .logo_us {
+    display: none;
+}
+
+.menu .button {
+    width: 410px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 17px;
+    margin-right:18px;
+}
+
+.menu .button .btn {
+    height: 29px;
+    border-radius: 22.5px;
+    background-color:#2C2C2C;
+    color: #FFFFFF;
+    display : flex;
+	justify-content : center;
+	align-items : center;
+    font-size: 15px;
+    box-shadow: 0px 4px 4px #B8B8B8;
+}
+
+.menu .button .btn:hover {
+    background-color:#FBFBFB;
+    color: #000000;
+}
+
+.menu .button #home {
+    width: 88px;
+}
+
+.menu .button #diary {
+    width: 88px;
+}
+.menu .button #map {
+    width: 62px;
+}
+.menu .button #profile {
+    width: 103px;
+}
+
+.menu .button #alarm {
+    width: 29px;
+    position: relative;
+}
+
+.menu .button #alarm img {
+    width: 13px;
+}
+
+.menu .button #alarm .alarm_black {
+    position: absolute;
+    display: none;
+}
+
+.menu .button #alarm:hover .alarm_black {
+    display: block;
+}
