@@ -164,7 +164,7 @@ const ForestDiary = () => {
                 ['heading', 'bold', 'italic', 'strike'],
                 ['image', 'link']
               ]}
-              height="490px" // 에디터 창 높이
+              height="100%" // 에디터 창 높이
               initialEditType="wysiwyg" // 기본 에디터 타입 (or wysiwyg)
               ref={editorRef} // ref 참조
               onChange={onChangeGetHTML} // onChange 이벤트

@@ -162,7 +162,7 @@ const SeaDiary = () => {
                 ['heading', 'bold', 'italic', 'strike'],
                 ['image', 'link']
               ]}
-              height="490px"
+              height="100%"
               initialEditType="wysiwyg"
               ref={editorRef}
               onChange={onChangeGetHTML}

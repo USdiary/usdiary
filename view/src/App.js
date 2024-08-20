@@ -4,6 +4,7 @@ import Login from './login/login.js';
 import ForestDiary from './diaries/diaries_forest.js';
 import CityDiary from './diaries/diaries_city.js';
 import SeaDiary from './diaries/diaries_sea.js';
+import CheckList from './diaries/checklist.js';
 
 const App = () => {
 
@@ -17,7 +18,9 @@ const App = () => {
         {/* 도시 다이어리 페이지 경로 */}
         <Route path="/city_diary" element={<CityDiary />}></Route>
         {/* 바다 다이어리 페이지 경로 */}
-        <Route path="/sea_diary" element={<SeaDiary />}></Route>        
+        <Route path="/sea_diary" element={<SeaDiary />}></Route>
+        {/* 도시 다이어리_체크리스트 페이지 경로 */}
+        <Route path="/city_diary/checklist" element={<CheckList />}></Route>             
       </Routes>
     </Router>
   )

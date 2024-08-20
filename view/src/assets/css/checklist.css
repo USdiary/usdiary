@@ -1,0 +1,614 @@
+/* Reset */
+* {
+    list-style: none;
+    text-decoration: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Wrap */
+.wrap {
+    min-width: 1100px;
+    min-height: 974px;
+}
+
+/* City Component */
+.wrap .city__checklist {
+    display: flex;
+}
+
+/* Check Section */
+.wrap .city__checklist__check {
+    width: 415px;
+    height: 803px;
+    background-color: #FFFDB9;
+    margin-top: 45px;
+    padding: 50px 50px 0px 42px; 
+    border-radius: 0px 50px 50px 0px;
+}
+
+.wrap .city__checklist__check-title {
+    display: flex;
+    margin-bottom: 52px;
+    align-items: center;
+}
+
+.wrap .city__checklist__check-title-name {
+    font-size: 30px;
+    font-family: "Noto Sans", sans-serif;
+    font-weight: 700; /* Bold font weight */
+    color: #828282;
+    margin-right: 8px;
+}
+
+.wrap .city__checklist__check-title-plusbtn {
+    width: 19px;
+    height: 19px;
+    background-color: #E6E4AE;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 18px;
+    text-align: center;
+    line-height: 15px;
+    color: #828282;
+    margin-top: 3px;
+}
+
+.wrap .city__checklist__check-routine {
+    margin-bottom: 42px;
+}
+
+.wrap .city__checklist__check-routine-top {
+    display: flex;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.wrap .city__checklist__check-routine-top-circle {
+    width: 4px;
+    height: 4px;
+    border-radius: 2px;
+    background-color: #828282;
+    margin: 2px 5px 0px 0px;
+}
+
+.wrap .city__checklist__check-routine-top-name {
+    font-size: 13px;
+    font-weight: 500;
+    margin-right: 3px;
+}
+
+.wrap .city__checklist__check-routine-top-num {
+    width: 12px;
+    height: 12px;
+    background-color: #D9D9D9;
+    color: #ffffff;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 8px;
+    text-align: center;
+    line-height: 11px;
+    margin-top: 4px;
+}
+
+.wrap .city__checklist__check-routine hr {
+    background-color: #828282;
+    border:0;
+    height:2px;
+    margin-bottom: 19px;
+}
+
+.wrap .city__checklist__check-routine-bottom {
+    /* 2개까지 보이게*/
+    height: 173px;
+    overflow: auto;
+}
+
+.wrap .city__checklist__check-routine-bottom::-webkit-scrollbar {
+    width: 5px;
+}
+.wrap .city__checklist__check-routine-bottom::-webkit-scrollbar-thumb {
+    background-color: #828282;
+    border-radius: 10px;
+}
+.wrap .city__checklist__check-routine-bottom::-webkit-scrollbar-track {
+    background-color: #D9D9D9;
+    border-radius: 10px;
+}
+
+.wrap .city__checklist__check-routine-bottom-box {
+    background-color: #ffffff;
+    height: 77px;
+    border-radius: 10px;
+    padding: 10px 12px 0px 12px;
+    margin-bottom: 19px;
+}
+
+.wrap .city__checklist__check-routine-bottom-box-category {
+    background-color: #9EA3AB;
+    width: 44px;
+    height: 12px;
+    border-radius: 2px;
+    color: #ffffff;
+    font-size: 8px;
+    text-align: center;
+    line-height: 10px;
+}
+
+.wrap .city__checklist__check-routine-bottom-box-title {
+    margin-top: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #0D062D;
+}
+
+.wrap .city__checklist__check-routine-bottom-box-content {
+    margin-top: 4px;
+    font-size: 9px;
+    font-weight: 400;
+    color: #787486;
+}
+
+
+.wrap .city__checklist__check-todo {
+    margin-bottom: 62px;
+}
+
+.wrap .city__checklist__check-todo-top {
+    display: flex;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.wrap .city__checklist__check-todo-top-circle {
+    width: 4px;
+    height: 4px;
+    border-radius: 2px;
+    background-color: #828282;
+    margin: 2px 5px 0px 0px;
+}
+
+.wrap .city__checklist__check-todo-top-name {
+    font-size: 13px;
+    font-weight: 500;
+    margin-right: 3px;
+}
+
+.wrap .city__checklist__check-todo-top-num {
+    width: 12px;
+    height: 12px;
+    background-color: #D9D9D9;
+    color: #ffffff;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 8px;
+    text-align: center;
+    line-height: 11px;
+    margin-top: 4px;
+}
+
+.wrap .city__checklist__check-todo hr {
+    background-color: #828282;
+    border:0;
+    height:2px;
+    margin-bottom: 19px;
+}
+
+.wrap .city__checklist__check-todo-bottom {
+    /* 3개까지 보이게*/
+    height: 269px;
+    overflow: auto;
+}
+
+.wrap .city__checklist__check-todo-bottom::-webkit-scrollbar {
+    width: 5px;
+}
+.wrap .city__checklist__check-todo-bottom::-webkit-scrollbar-thumb {
+    background-color: #828282;
+    border-radius: 10px;
+}
+.wrap .city__checklist__check-todo-bottom::-webkit-scrollbar-track {
+    background-color: #D9D9D9;
+    border-radius: 10px;
+}
+
+.wrap .city__checklist__check-todo-bottom-box {
+    background-color: #ffffff;
+    height: 77px;
+    border-radius: 10px;
+    padding: 10px 12px 0px 12px;
+    margin-bottom: 19px;
+}
+
+.wrap .city__checklist__check-todo-bottom-box-category {
+    background-color: #9EA3AB;
+    width: 44px;
+    height: 12px;
+    border-radius: 2px;
+    color: #ffffff;
+    font-size: 8px;
+    text-align: center;
+    line-height: 10px;
+}
+
+.wrap .city__checklist__check-todo-bottom-box-title {
+    margin-top: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #0D062D;
+}
+
+.wrap .city__checklist__check-todo-bottom-box-content {
+    margin-top: 4px;
+    font-size: 9px;
+    font-weight: 400;
+    color: #787486;
+}
+
+
+
+
+
+
+
+
+
+/* Diary Section */
+.wrap .city__checklist__diary {
+    display: flex;
+    margin: auto;
+    flex-direction: column;
+    align-items: center;
+    width: 60%;
+}
+
+.wrap .city__checklist__diary-top {
+    display: flex;
+    width: 588px;
+    margin-top: 42px;
+    margin-bottom: 20px;    
+}
+
+/* City Image */
+.wrap .city__checklist__diary-top-image {
+    height: 60px;
+    margin-right: 17px;
+}
+
+/* Today's City Title */
+.wrap .city__checklist__diary-top-title {
+    font-size: 32px;
+    font-family: "Noto Sans", sans-serif;
+    font-weight: 700; /* Bold font weight */
+    color: #828282;
+    padding-top: 12px;
+}
+
+/* Date Section */
+.wrap .city__checklist__diary-date {
+    width: 566px;
+    height: 40px;
+    margin-bottom: 19px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Date Arrow */
+.wrap .city__checklist__diary-date-arrow {
+    width: 20px;
+    height: 20px;
+    margin-top: 10px;
+}
+
+/* Date Container */
+.wrap .city__checklist__diary-date-container {
+    width: 468px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Date Round */
+.wrap .city__checklist__diary-date-round {
+    width: 40px;
+    height: 40px;
+    background-color: #FFFDB9;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Noto Sans", sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #9e9e9e;
+}
+
+.wrap .city__checklist__diary-date-round--today {
+    background-color: #FDEF6B;
+    color: #ffffff;
+}
+
+/* Title Edit */
+.wrap .city__checklist__diary-title-edit {
+    width: 591px;
+    height: 33px;
+    color: #C6C9CE;
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 26px;
+    line-height: 20px;
+    font-family: "Noto Sans KR", sans-serif;
+    font-weight: 600;
+    border-style: solid;
+    border-width: 0 0 1px;
+    border-color: #BBBBBB;
+    outline: none;
+}
+
+/* Another Section */
+.wrap .city__checklist__diary-another {
+    width: 90%;
+    height: 30px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Reveal Component */
+.wrap .city__checklist__diary-another-reveal {
+    width: 159px;
+    height: 30px;
+    background-color: #F5F5F5;
+    border-radius: 10px;
+    margin-right: 13px;
+    display: flex;
+    justify-content: space-between;
+    padding: 6px;
+}
+
+/* Reveal Button */
+.wrap .city__checklist__diary-another-reveal-btn {
+    height: 18px;
+    background-color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 600;
+    color: #7D7D7D;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    padding-top: 2px;
+}
+
+.wrap .city__checklist__diary-another-reveal-btn--only {
+    width: 42px;
+}
+
+.wrap .city__checklist__diary-another-reveal-btn--subscribe {
+    width: 53px;
+}
+
+.wrap .city__checklist__diary-another-reveal-btn--all {
+    width: 43px;
+}
+
+.wrap .city__checklist__diary-another-reveal-btn--selected {
+    background-color: #E8E6E6;
+    color: #7D7D7D;
+}
+
+/* Submit Button */
+.wrap .city__checklist__diary-another-submit {
+    width: 55px;
+    height: 30px;
+    background-color: #FDEF6B;
+    margin-right: 4px;
+    border-radius: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 10px;
+    color: #ffffff;
+}
+
+.wrap .city__checklist__diary-another-submit:hover {
+    background-color: #FFFDB9;
+}
+
+/* Text Editor */
+.wrap .city__checklist__diary-texts {
+    width: 90%;
+    height: 519px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #828282;
+    margin-bottom: 50px;
+}
+
+.wrap .city__checklist__diary-texts p {
+    font-size: large;
+}
+
+
+/* popup */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(81, 81, 81, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-items: flex-start; /* 위쪽에 맞춤 */
+    overflow: auto; /* 스크롤이 가능하도록 설정 */
+    z-index: 1000; /* 다른 요소들 위에 표시 */
+    padding: 107px 0px 64px 0px;
+}
+
+.popup-background {
+    background: #FFFDB9;
+    border-radius: 42px;
+    width: 578px;
+    height: 803px;
+    padding: 70px 0px 0px 0px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+    position: relative; /* 위치 설정을 위한 상대적 위치 */
+    overflow-y: auto; /* 내용이 넘칠 경우 세로 스크롤 */
+}
+
+.popup-content {
+    width: 472px;
+    margin: auto;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 21px;
+    font-family: "Noto Sans", sans-serif;
+    font-weight: 700; /* Bold font weight */
+    width: 472px;
+    color: #828282;
+    margin-bottom: 28px;
+}
+
+.popup-close {
+    background: transparent;
+    border: none;
+    font-size: 32px;
+    font-family: "Noto Sans", sans-serif;
+    font-weight: 700; /* Bold font weight */
+    color: #828282;
+    cursor: pointer;
+}
+
+.popup-routine {
+    background: #ffffff;
+    border-radius: 8px;
+    width: 472px;
+    height: 600px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.popup-routine {
+    padding: 60px 44px 0px 44px;
+    position: relative;
+}
+
+.popup-routine-top {
+    display: flex;
+    justify-content: space-between;
+}
+
+.popup-routine-top-title {
+    display: flex;
+}
+
+.popup-routine-top-title-circle {
+    width: 6.5px;
+    height: 6.5px;
+    border-radius: 3.25px;
+    background-color: #828282;
+    margin: 13px 8px 0px 0px;
+
+}
+
+.popup-routine-top-title-name {
+    font-size: 22px;
+    font-weight: 500;
+    margin-right: 3px;
+    color: #7D7D7D;
+}
+
+.popup-routine-top-arrow {
+    height: 20px;
+    margin-top: 6px;
+}
+
+hr {
+    width: 100%;
+    background-color: #828282;
+    border: 0;
+    height: 2px;
+    margin: 27px 0px;
+}
+
+.popup-routine-middle {
+    width: 100%;
+    margin-top: 21px;
+}
+
+.popup-routine-middle-box {
+    width: 100%;
+    height: 100px;
+    border-radius: 10px;
+    padding: 10px 12px 0px 12px;
+    border: 1px solid #9EA3AB;
+    margin-bottom: 11px;
+}
+
+.popup-routine-middle-box-category {
+    background-color: #9EA3AB;
+    width: 44px;
+    height: 12px;
+    border-radius: 2px;
+    color: #ffffff;
+    font-size: 8px;
+    text-align: center;
+    line-height: 10px;
+}
+
+.popup-routine-middle-box-title {
+    margin-top: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #0D062D;
+}
+
+.popup-routine-middle-box-content {
+    margin-top: 4px;
+    font-size: 9px;
+    font-weight: 400;
+    color: #787486;
+}
+
+.popup-routine-middle-plusbtn {
+    height: 26px;
+    font-size: 13px;
+    /* font-weight: 600; */
+    text-align: center;
+    line-height: 26px;
+    color: #ffffff;
+    background-color: #D9D9D9;
+    border-radius: 5px;
+}
+
+.popup-routine-savebtn {
+    margin-left: 330px;
+    bottom: 28px;
+	position: absolute;
+    font-size: 9px;
+    text-align: center;
+    line-height: 30px;
+    width: 55px;
+	height: 30px;
+    color: #ffffff;
+	background-color: #FDEF6B;
+    border-radius: 20px;
+}
+
+/* Diary Button in Menu */
+.menu .button #diary {
+    height: 29px;
+    border-radius: 22.5px;
+    background-color: #ffffff;
+    color: #2C2C2C;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 15px;
+    box-shadow: 0px 4px 4px #B8B8B8;
+}
+  

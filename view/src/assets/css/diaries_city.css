@@ -121,8 +121,8 @@
 /* Another Section */
 .wrap .city__diary-another {
     width: 930px;
-    height: 43px;
-    margin-bottom: 23px;
+    height: 30px;
+    margin-bottom: 30px;
     display: flex;
     justify-content: flex-end;
 }
