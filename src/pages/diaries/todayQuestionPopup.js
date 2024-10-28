@@ -30,7 +30,7 @@ const TodayQuestionPopup = ({ onClose, question, question_id, initialAnswer, ini
         formData.append('answer_photo', answer_photo);  // 변경된 변수
       }
 
-      await axios.post(`http://localhost:3001/contents/questions/${question_id}/answers`, formData, {
+      await axios.post(`https://api.usdiary.site/contents/questions/${question_id}/answers`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -46,7 +46,7 @@ const TodayQuestionPopup = ({ onClose, question, question_id, initialAnswer, ini
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:3001/contents/questions/${question_id}/answers`);  // 변경된 API 경로
+      await axios.delete(`https://api.usdiary.site/contents/questions/${question_id}/answers`);  // 변경된 API 경로
       alert('답변이 성공적으로 삭제되었습니다.');
       onDelete();
     } catch (error) {

@@ -27,7 +27,7 @@ const ForestComponent = () => {
   // Axios로 다이어리 데이터 fetch
   const fetchDiaryData = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/diaries`, {
+      const response = await axios.get(`/diaries`, {
         params: { date: selectedDate.toISOString().split('T')[0] } // 날짜를 query parameter로 전달
       });
       setDiaryData(response.data); // 불러온 데이터 설정

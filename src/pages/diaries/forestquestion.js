@@ -28,12 +28,12 @@ const ForestQuestion = ({ onBack }) => {
       if (diary && diary.diary_id) {
         try {
           // 질문 데이터 가져오기
-          const questionResponse = await axios.get(`http://localhost:3001/questions/${diary.diary_id}`);
+          const questionResponse = await axios.get(`https://api.usdiary.site/questions/${diary.diary_id}`);
           setTodayQuestion(questionResponse.data.question_text); // question_text로 설정
           setQuestionId(questionResponse.data.question_id); // question_id 설정
   
           // 답변 데이터 가져오기
-          const answerResponse = await axios.get(`http://localhost:3001/contents/questions/${questionResponse.data.question_id}/answers/${diary.diary_id}`);
+          const answerResponse = await axios.get(`https://api.usdiary.site/contents/questions/${questionResponse.data.question_id}/answers/${diary.diary_id}`);
           setInitialAnswer(answerResponse.data.answer_text || ''); 
           setInitialPhoto(answerResponse.data.answer_photo || null);
           setDiaryId(answerResponse.data.diary_id || null);
@@ -52,12 +52,12 @@ const ForestQuestion = ({ onBack }) => {
   useEffect(() => {
     const fetchTodayQuestion = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/questions/random');
+        const response = await axios.get('https://api.usdiary.site/questions/random');
         setTodayQuestion(response.data.question);
         setQuestionId(response.data.id);
 
         // 기존 답변과 사진 가져오기
-        const answersResponse = await axios.get(`http://localhost:3001/questions/${response.data.id}/answers`);
+        const answersResponse = await axios.get(`https://api.usdiary.site/questions/${response.data.id}/answers`);
         const latestAnswer = answersResponse.data[0] || {};
         setInitialAnswer(latestAnswer.answer_text || ''); // 변경된 변수
         setInitialPhoto(latestAnswer.answer_photo || null); // 변경된 변수
@@ -81,7 +81,7 @@ const ForestQuestion = ({ onBack }) => {
 
   const handleSubmit = async () => {
     try {
-      await axios.post('http://localhost:3001/questions', {
+      await axios.post('https://api.usdiary.site/questions', {
         title,
         content: editorData,
         date: selectedDate.toISOString(),
@@ -98,7 +98,7 @@ const ForestQuestion = ({ onBack }) => {
 
   const handleUpdateQuestion = async () => {
     try {
-      await axios.patch(`http://localhost:3001/questions/${question_id}`, {
+      await axios.patch(`https://api.usdiary.site/questions/${question_id}`, {
         title,
         content: editorData,
       });
@@ -112,7 +112,7 @@ const ForestQuestion = ({ onBack }) => {
 
   const handleDeleteQuestion = async () => {
     try {
-      await axios.delete(`http://localhost:3001/questions/${question_id}`);
+      await axios.delete(`https://api.usdiary.site/questions/${question_id}`);
 
       alert('질문이 성공적으로 삭제되었습니다.');
     } catch (error) {
@@ -129,7 +129,7 @@ const ForestQuestion = ({ onBack }) => {
         formData.append('answer_photo', initialPhoto);  // 변경된 변수
       }
 
-      await axios.patch(`http://localhost:3001/contents/questions/${question_id}/answers/${diary_id}`, formData, {
+      await axios.patch(`https://api.usdiary.site/contents/questions/${question_id}/answers/${diary_id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -144,7 +144,7 @@ const ForestQuestion = ({ onBack }) => {
 
   const handleDeleteAnswer = async () => {
     try {
-      await axios.delete(`http://localhost:3001/contents/questions/${question_id}/answers/${diary_id}`);  // 변경된 API 경로
+      await axios.delete(`https://api.usdiary.site/contents/questions/${question_id}/answers/${diary_id}`);  // 변경된 API 경로
 
       alert('답변이 성공적으로 삭제되었습니다.');
     } catch (error) {
