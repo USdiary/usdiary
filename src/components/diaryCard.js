@@ -6,6 +6,7 @@ import axios from 'axios';
 const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nick, board_name, isFriendPage, diary_id, user_id, onClick }) => {
     const [liked, setLiked] = useState(false);
 
+    /*
     useEffect(() => {
         const fetchLikeStatus = async () => {
             try {
@@ -18,7 +19,7 @@ const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nic
             }
         };
         fetchLikeStatus();
-    }, [diary_id, user_id]);
+    }, [diary_id, user_id]); */
 
     const formatDate = (date) => {
         if (!date) return 'Invalid date';  // date가 없으면 기본 메시지 반환
@@ -79,7 +80,7 @@ const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nic
                     {liked ? <FilledHeart /> : <EmptyHeart />}
                 </span>
             </div>
-            <img src={post_photo || '../assets/images/default.png'} alt={diary_title} className="diary-image" />
+            <img src={post_photo && post_photo !== '' ? post_photo : '../assets/images/default.png'} alt={diary_title} className="diary-image" />
             <div className="diary-content">
                 <h2 className="diary-title">{diary_title}</h2>
                 <p className="diary-date">{formattedDate}</p>

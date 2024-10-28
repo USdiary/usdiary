@@ -11,26 +11,29 @@ import axios from "axios";
 const Forest = () => {
     const [diaries, setDiaries] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageGroup, setPageGroup] = useState(0);
-    const diariesPerPage = 12;
-    const pagesPerGroup = 5;
+    const [pageGroup, setPageGroup] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false); // Add a loading state
     const [error, setError] = useState(null); // Add an error state
     const [selectedDiaryId, setSelectedDiaryId] = useState(null);
     const [filter, setFilter] = useState('latest');
+    const [user_id, setUserId] = useState(null);
     const baseURL = 'https://api.usdiary.site';
 
-    const token = localStorage.getItem('token'); // 'token'은 로컬 스토리지에 저장된 토큰의 키입니다.
-    let user_id = null;
+    const diariesPerPage = 12;
+    const pagesPerGroup = 5;
 
-    if (token) {
-        try {
-            user_id = jwtDecode(token).user_id; // 유효한 토큰일 경우에만 user_id 설정
-        } catch (error) {
-            console.error('Failed to decode token:', error);
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const decodedToken = jwtDecode(token);
+                setUserId(decodedToken.user_id);
+            } catch (error) {
+                console.error('Failed to decode token:', error);
+            }
         }
-    }
+    }, []);
 
     useEffect(() => {
         let isCancelled = false;
@@ -38,12 +41,12 @@ const Forest = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const board_id = 1;
+                const board_id = 1; // 필터링할 게시판 ID
                 let response;
 
-                // 필터에 따라 API 호출 결정
+                // 필터에 따라 API 호출
                 if (filter === 'latest') {
-                    response = await axios.get('/diaries', {
+                    response = await axios.get(`${baseURL}/diaries`, {
                         params: {
                             page: currentPage,
                             limit: diariesPerPage,
@@ -51,15 +54,15 @@ const Forest = () => {
                         }
                     });
                 } else if (filter === 'topLikes') {
-                    response = await axios.get('/diaries/weekly-likes', {  // 수정된 부분
+                    response = await axios.get(`${baseURL}/diaries/weekly-likes`, {
                         params: {
                             page: currentPage,
                             limit: diariesPerPage,
                             board_id: board_id
                         }
                     });
-                } else if (filter === 'topViews') {  // Top Views 필터에 대한 API 호출 추가
-                    response = await axios.get('/diaries/weekly-views', {
+                } else if (filter === 'topViews') {
+                    response = await axios.get(`${baseURL}/diaries/weekly-views`, {
                         params: {
                             page: currentPage,
                             limit: diariesPerPage,
@@ -68,11 +71,15 @@ const Forest = () => {
                     });
                 }
 
-                const total = response.data.totalDiaries;
-                const diaries = response.data.data.diary;
+                const total = response.data.totalDiaries; // 전체 일기 수
+                const diaries = response.data.data.diary; // 일기 목록
                 if (!isCancelled) {
                     setDiaries(diaries);
-                    setTotalPages(Math.ceil(total / diariesPerPage));
+                    setTotalPages(Math.ceil(total / diariesPerPage)); // 총 페이지 수 계산
+                    // 현재 페이지가 totalPages보다 크면 currentPage를 totalPages로 설정
+                    if (currentPage > totalPages) {
+                        setCurrentPage(totalPages);
+                    }
                 }
             } catch (error) {
                 if (!isCancelled) setError('Failed to load data');
@@ -85,12 +92,6 @@ const Forest = () => {
             isCancelled = true;
         };
     }, [currentPage, filter]);
-
-    useEffect(() => {
-        if (currentPage > totalPages) {
-            setCurrentPage(totalPages);
-        }
-    }, [currentPage, totalPages]);
 
     const indexOfLastDiary = currentPage * diariesPerPage;
     const indexOfFirstDiary = indexOfLastDiary - diariesPerPage;
@@ -120,18 +121,17 @@ const Forest = () => {
     );
 
     const handleDiaryClick = (diary_id) => {
-        console.log("Diary clicked:", diary_id);
-        setSelectedDiaryId(diary_id); // 클릭한 다이어리 ID를 설정
+        setSelectedDiaryId(diary_id);
     };
 
     const handleClosePopup = () => {
-        setSelectedDiaryId(null); // 팝업 닫기
+        setSelectedDiaryId(null);
     };
 
     const handleFilterChange = (newFilter) => {
-        setFilter(newFilter); // 선택한 필터로 상태 업데이트
-        setCurrentPage(1); // 페이지를 1로 초기화
-        setPageGroup(0); // 페이지 그룹 초기화
+        setFilter(newFilter);
+        setCurrentPage(1);
+        setPageGroup(0);
     };
 
     return (
