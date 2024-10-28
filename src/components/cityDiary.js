@@ -89,23 +89,30 @@ const CityComponent = () => {
     }
   };
 
-    const handleSubmit = async () => {
-        const diaryData = {
-            createdAt: selectedDate,
-            diary_title: diary_title,
-            diary_content: diary_content,
-            access_level: access_level,
-            post_photo: post_photo,
-            board_id: 2
-        };
+  const handleSubmit = async () => {
+    if (!diary_title || !diary_content) {
+      alert("제목과 내용을 모두 입력해주세요.");
+      return;
+    }
 
-        try {
-            const response = await axios.post('/diaries', diaryData); // axios로 POST 요청
-            console.log('저장 완료:', response.data);
-        } catch (error) {
-            console.error("Error submitting diary:", error);
-        }
+    const diaryData = {
+      createdAt: selectedDate,
+      diary_title: diary_title,
+      diary_content: diary_content,
+      access_level: access_level,
+      post_photo: post_photo,
+      board_id: 2
     };
+
+    try {
+      const response = await axios.post('/diaries', diaryData); // axios로 POST 요청
+      console.log('저장 완료:', response.data);
+      navigate('/city');
+    } catch (error) {
+      console.error("Error submitting diary:", error);
+    }
+  };
+
 
   const handleEdit = () => {
     setIsEditing(true); // 편집 모드로 전환

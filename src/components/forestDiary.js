@@ -92,8 +92,10 @@ const ForestComponent = () => {
   };
 
   const handleSubmit = async () => {
-    // 로컬 스토리지에서 토큰 가져오기
-    const token = localStorage.getItem('token');
+    if (!diary_title || !diary_content) {
+      alert("제목과 내용을 모두 입력해주세요.");
+      return;
+    }
 
     const diaryData = {
       createdAt: selectedDate,
@@ -101,20 +103,13 @@ const ForestComponent = () => {
       diary_content: diary_content,
       access_level: access_level,
       post_photo: post_photo,
-      board_id: 1
+      board_id: 2
     };
 
     try {
-      const response = await fetch('/diaries', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(diaryData), // 서버로 데이터 전송
-      });
-      const result = await response.json();
-      console.log('저장 완료:', result);
+      const response = await axios.post('/diaries', diaryData); // axios로 POST 요청
+      console.log('저장 완료:', response.data);
+      navigate('/forest');
     } catch (error) {
       console.error("Error submitting diary:", error);
     }

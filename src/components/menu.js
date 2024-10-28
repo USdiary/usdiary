@@ -7,59 +7,59 @@ import alarm_black from '../assets/images/alarm_black.png';
 import '../assets/css/login.css';
 import Alarm from '../components/alarm';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 const Menu = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isAlarmOpen, setAlarmOpen] = useState(false);
     const [activeButton, setActiveButton] = useState('');
-    const [sign_id, setSignId] = useState(null);
-    const [userTendency, setUserTendency] = useState(null); // 사용자 성향 초기값을 null로 설정
+    const [user_id, setUserId] = useState(null);
+    const [userTendency, setUserTendency] = useState(null);
 
     // 성향에 맞는 로컬스토리지 값 설정
-    const setTendencyMenu = (userTendency) => {
-        if (userTendency === 1) {
-            localStorage.setItem('selectedMenu', 'forest');
-        } else if (userTendency === 2) {
-            localStorage.setItem('selectedMenu', 'city');
-        } else if (userTendency === 3) {
-            localStorage.setItem('selectedMenu', 'sea');
+    useEffect(() => {
+        if (userTendency !== null) {
+            localStorage.setItem('selectedMenu', userTendency === 1 ? 'forest' : userTendency === 2 ? 'city' : 'sea');
         }
-    };
-
-    // 삭제 금지
-    // 하드코딩된 성향 값 설정 (예: 1은 'forest', 2는 'city', 3은 'sea')
-    // useEffect(() => {
-    //     const hardcodedTendency = 1; // 예시로 'forest'로 설정
-    //     setUserTendency(hardcodedTendency); // 성향 설정
-    //     setTendencyMenu(hardcodedTendency); // 로컬스토리지 업데이트
-    // }, []);
+    }, [userTendency]);
 
     // 서버호출
     useEffect(() => {
-        axios.get('/users/login')
-            .then((response) => {
-                const signIdFromServer = response.data.sign_id; // 서버에서 받은 sign_id
-                setSignId(signIdFromServer); // sign_id 상태 업데이트
-            })
-            .catch((error) => {
-                console.error('sign_id를 가져오는 중 에러 발생:', error);
-            });
-    }, []);
+        const token = localStorage.getItem('token');
+        let user_id = null;
 
-    useEffect(() => {
-        if (sign_id) {
-            axios.get(`/users/${sign_id}/tendency`)
+        if (token) {
+            const decodedToken = jwtDecode(token);
+            user_id = decodedToken.user_id;
+            console.log(user_id);
+            setUserId(user_id);
+        }
+
+        if (user_id) {
+            // 사용자 프로필 정보 가져오기
+            axios.get(`/mypages/profiles/${user_id}`)
                 .then((response) => {
-                    const userTendencyFromServer = response.data.tendency; // 서버에서 받은 성향 값
-                    setUserTendency(userTendencyFromServer); // 상태 업데이트
-                    setTendencyMenu(userTendencyFromServer); // 로컬스토리지 업데이트
+                    console.log(response.data);
+                    const userTendencyFromServer = response.data.data.user_tendency;
+                    console.log(userTendencyFromServer);
+                    
+                    if (userTendencyFromServer === null) {
+                        localStorage.removeItem('selectedMenu');
+                    } else {
+                        setUserTendency(userTendencyFromServer); // 성향 상태 업데이트
+    
+                        localStorage.setItem('selectedMenu', userTendencyFromServer === 1 ? 'forest' : userTendencyFromServer === 2 ? 'city' : 'sea');
+                    }
                 })
                 .catch((error) => {
-                    console.error('성향 값을 가져오는 중 에러 발생:', error);
+                    console.error('사용자 프로필 정보를 가져오는 중 에러 발생:', error);
                 });
+        }   else {
+            // user_id가 없을 경우 로컬스토리지 초기화
+            localStorage.removeItem('selectedMenu');
         }
-    }, [sign_id]);
+    }, []);
 
     // 페이지 이동 시 성향에 따라 로컬스토리지 값 업데이트
     useEffect(() => {
@@ -128,31 +128,29 @@ const Menu = () => {
         setAlarmOpen(!isAlarmOpen);
     };
 
-    // 로고 클릭 시 성향에 따라 홈화면으로 이동하는 함수
     const handleLogoClick = (e) => {
+        e.preventDefault();
+    
         if (location.pathname === '/map') {
-            e.preventDefault();
             return;
         }
-
+    
         if (location.pathname === '/friend') {
             navigate('/friend');
             return;
         }
-
-        const savedMenu = localStorage.getItem('selectedMenu');
-        if (savedMenu === 'forest') {
+    
+        if (userTendency === 1) {
             navigate('/forest');
-        } else if (savedMenu === 'city') {
+        } else if (userTendency === 2) {
             navigate('/city');
-        } else if (savedMenu === 'sea') {
+        } else if (userTendency === 3) {
             navigate('/sea');
         }
     };
 
     return (
         <div className="menu">
-            {/* 로고 클릭 이벤트 추가 */}
             <div className="logo" onClick={handleLogoClick}>
                 <img src={Logo_US} className="logo_us" alt="Logo US" />
                 <img src={Logo_EARTH} className="logo_earth" alt="Logo Earth" />

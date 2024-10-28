@@ -89,6 +89,7 @@
     margin: auto;
     width: 65%;
     min-width: 681px;
+    min-height: 700px;
     position: relative;
 }
 
