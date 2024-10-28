@@ -5,6 +5,7 @@ import GuidePopup from '../../components/guide';
 import DiaryFilter from "../../components/diaryFilter";
 import '../../assets/css/forest.css';
 import Menu from "../../components/menu";
+import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
 const Forest = () => {
@@ -18,7 +19,19 @@ const Forest = () => {
     const [error, setError] = useState(null); // Add an error state
     const [selectedDiaryId, setSelectedDiaryId] = useState(null);
     const [filter, setFilter] = useState('latest');
-    const baseURL = 'http://localhost:3001'
+    const baseURL = 'https://api.usdiary.site';
+
+    const token = localStorage.getItem('token'); // 'token'은 로컬 스토리지에 저장된 토큰의 키입니다.
+    let user_id = null;
+
+    if (token) {
+        try {
+            user_id = jwtDecode(token).user_id; // 유효한 토큰일 경우에만 user_id 설정
+        } catch (error) {
+            console.error('Failed to decode token:', error);
+        }
+    }
+
     useEffect(() => {
         let isCancelled = false;
 
@@ -106,7 +119,8 @@ const Forest = () => {
         (_, index) => pageGroup * pagesPerGroup + index + 1
     );
 
-    const handleDiaryClick = (diary_id, board_name) => {
+    const handleDiaryClick = (diary_id) => {
+        console.log("Diary clicked:", diary_id);
         setSelectedDiaryId(diary_id); // 클릭한 다이어리 ID를 설정
     };
 
@@ -151,8 +165,8 @@ const Forest = () => {
                                 like_count={diary.like_count}
                                 diary_id={diary.diary_id}
                                 onClick={() => handleDiaryClick(diary.diary_id)}
+                                user_id={user_id}
                             />
-
                         ))}
                     </div>
 

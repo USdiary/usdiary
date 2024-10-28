@@ -275,6 +275,7 @@
 .forest-popup__question-section {
     display: flex;
     flex-direction: column;
+    min-height: 500px;
     min-width: 300px;
     width: 35%;
     margin-left: -20px;

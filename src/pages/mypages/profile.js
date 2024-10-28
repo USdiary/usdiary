@@ -57,7 +57,7 @@ const ProfilePage = () => {
     }
 
     // 서버에 비밀번호 확인 요청
-    const response = await fetch('/api/verify-password', {
+    const response = await fetch('https://api.usdiary.site/verify-password', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
