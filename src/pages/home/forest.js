@@ -19,7 +19,7 @@ const Forest = () => {
     const [error, setError] = useState(null); // Add an error state
     const [selectedDiaryId, setSelectedDiaryId] = useState(null);
     const [filter, setFilter] = useState('latest');
-    const baseURL = 'http://api.usdiary.site';
+    const baseURL = 'https://api.usdiary.site';
 
     const token = localStorage.getItem('token'); // 'token'은 로컬 스토리지에 저장된 토큰의 키입니다.
     let user_id = null;

@@ -15,7 +15,7 @@ const Login = () => {
     const navigate = useNavigate();
 
     const handleGoogleLogin = () => {
-        window.location.href = 'http://api.usdiary.site/users/login/google';
+        window.location.href = 'https://api.usdiary.site/users/login/google';
     }
 
     const handleSubmit = async (e) => {
@@ -30,7 +30,7 @@ const Login = () => {
 
         try {
             // 서버에 POST 요청 보내기
-            const response = await fetch('http://api.usdiary.site/users/login', { // 서버 URL 확인
+            const response = await fetch('https://api.usdiary.site/users/login', { // 서버 URL 확인
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

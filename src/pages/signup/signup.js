@@ -163,7 +163,7 @@ const SignUp = () => {
 
     const handleOpenPopup = async () => {
         try {
-            const response = await fetch('http://localhost:3001/register/send-verification-code', {
+            const response = await fetch('https://api.usdiary.site/register/send-verification-code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
