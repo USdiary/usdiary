@@ -92,6 +92,12 @@ const ForestComponent = () => {
   };
 
   const handleSubmit = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+    
     if (!diary_title || !diary_content) {
       alert("제목과 내용을 모두 입력해주세요.");
       return;

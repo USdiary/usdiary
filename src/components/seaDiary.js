@@ -101,7 +101,7 @@ const SeaComponent = () => {
       diary_content: diary_content,
       access_level: access_level,
       post_photo: post_photo,
-      board_id: 2
+      board_id: 3
     };
 
     try {
