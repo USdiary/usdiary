@@ -45,7 +45,6 @@ const Forest = () => {
                 let response;
 
                 // 필터에 따라 API 호출
-                console.log('Current filter:', filter);
                 if (filter === 'latest') {
                     response = await axios.get(`https://api.usdiary.site/diaries`, {
                         params: {
@@ -161,7 +160,7 @@ const Forest = () => {
                                 diary_title={diary.diary_title}  // title → diary_title
                                 createdAt={diary.createdAt}       // date → createdAt
                                 diary_content={diary.diary_content.substring(0, 20) + ' ...'}  // summary → diary_content
-                                post_photo={`${baseURL}${diary.post_photo}`}    // imageUrl → post_photo
+                                post_photo={`${baseURL}/${diary.post_photo}`}    // imageUrl → post_photo
                                 board_name={diary.Board.board_name}     // boardName → board_name
                                 user_nick={diary.User.user_nick}        // nickname → user_nick
                                 like_count={diary.like_count}
