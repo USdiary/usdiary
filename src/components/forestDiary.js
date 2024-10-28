@@ -105,7 +105,7 @@ const ForestComponent = () => {
     };
 
     try {
-      const response = await fetch('/diaries', {
+      const response = await fetch('https://api.usdiary.site/diaries', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -141,7 +141,7 @@ const ForestComponent = () => {
       formData.append('access_level', updatedDiary.access_level);
       formData.append('post_photo', updatedDiary.post_photo);
 
-      const response = await fetch(`/diaries/${diary.diary_id}`, {
+      const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'PATCH',
         body: formData,
       });
@@ -160,7 +160,7 @@ const ForestComponent = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/diaries/${diary.diary_id}`, {
+      const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'DELETE',
       });
 

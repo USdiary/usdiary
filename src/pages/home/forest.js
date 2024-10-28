@@ -45,8 +45,9 @@ const Forest = () => {
                 let response;
 
                 // 필터에 따라 API 호출
+                console.log('Current filter:', filter);
                 if (filter === 'latest') {
-                    response = await axios.get(`${baseURL}/diaries`, {
+                    response = await axios.get(`https://api.usdiary.site/diaries`, {
                         params: {
                             page: currentPage,
                             limit: diariesPerPage,
@@ -54,7 +55,7 @@ const Forest = () => {
                         }
                     });
                 } else if (filter === 'topLikes') {
-                    response = await axios.get(`${baseURL}/diaries/weekly-likes`, {
+                    response = await axios.get(`https://api.usdiary.site/diaries/weekly-likes`, {
                         params: {
                             page: currentPage,
                             limit: diariesPerPage,
@@ -62,7 +63,7 @@ const Forest = () => {
                         }
                     });
                 } else if (filter === 'topViews') {
-                    response = await axios.get(`${baseURL}/diaries/weekly-views`, {
+                    response = await axios.get(`https://api.usdiary.site/diaries/weekly-views`, {
                         params: {
                             page: currentPage,
                             limit: diariesPerPage,
@@ -82,6 +83,7 @@ const Forest = () => {
                     }
                 }
             } catch (error) {
+                console.error('Error fetching data:', error);
                 if (!isCancelled) setError('Failed to load data');
             } finally {
                 if (!isCancelled) setLoading(false);
