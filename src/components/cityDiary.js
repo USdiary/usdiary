@@ -27,7 +27,7 @@ const CityComponent = () => {
     // fetchDiaryData에서 axios 사용
     const fetchDiaryData = useCallback(async () => {
         try {
-            const response = await axios.get(`/api/diaries?date=${selectedDate.toISOString().split('T')[0]}`); // axios로 요청
+            const response = await axios.get(`/diaries?date=${selectedDate.toISOString().split('T')[0]}`); // axios로 요청
             setDiaryData(response.data); // 불러온 데이터 설정
             setTitle(response.data.diary_title); // 제목 업데이트
             if (editorRef.current) {

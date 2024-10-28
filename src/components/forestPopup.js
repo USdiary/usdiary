@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../assets/css/forestPopup.css';
-import miniTreeImage from '../assets/images/minitree.png'
+import miniTreeImage from '../assets/images/minitree.png';
 import sirenIcon from '../assets/images/siren_forest.png';
 import axios from 'axios';
 import ReportPopup from './reportPopup';
@@ -9,10 +9,10 @@ const ForestPopup = ({ diary_id, onClose }) => {
     const [diary, setDiary] = useState(null);
     const [comments, setComments] = useState([]);
     const [questionData, setQuestionData] = useState(null);
-    const [answerData, setAnswerData] = useState(null);
+    const [answerData, setAnswerData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [newComment, setNewComment] = useState(""); // 새 댓글 상태
+    const [newComment, setNewComment] = useState("");
     const [editingcomment_id, setEditingcomment_id] = useState(null);
     const commentRefs = useRef({});
     const [liked, setLiked] = useState(false);
@@ -32,7 +32,6 @@ const ForestPopup = ({ diary_id, onClose }) => {
             }
         };
 
-        // Fetch question data
         const fetchQuestionData = async () => {
             try {
                 const questionResponse = await axios.get(`/questions/${diary_id}`);
@@ -43,7 +42,6 @@ const ForestPopup = ({ diary_id, onClose }) => {
             }
         };
 
-        // Fetch comments data
         const fetchComments = async () => {
             try {
                 const commentsResponse = await axios.get(`/diaries/${diary_id}/comments`);
@@ -54,20 +52,17 @@ const ForestPopup = ({ diary_id, onClose }) => {
             }
         };
 
-        // Fetch all data
         const fetchAllData = async () => {
             setLoading(true);
             await Promise.all([
                 fetchDiaryData(),
                 fetchQuestionData(),
                 fetchComments()
-
             ]);
             setLoading(false);
         };
 
         fetchAllData();
-
 
         // 팝업이 뜨면 배경 스크롤 방지
         document.body.style.overflow = 'hidden';
@@ -77,64 +72,6 @@ const ForestPopup = ({ diary_id, onClose }) => {
             document.body.style.overflow = '';
         };
     }, [diary_id]);
-
-    useEffect(() => {
-        if (questionData) {
-            const fetchAnswerData = async () => {
-                try {
-                    const answersResponse = await axios.get(`/answers/${questionData.question_id}`);
-                    setAnswerData(answersResponse.data);
-                } catch (err) {
-                    setError('Failed to fetch answer data');
-                    console.error(err);
-                }
-            };
-
-            fetchAnswerData();
-        }
-    }, [questionData]);
-
-    useEffect(() => {
-        // Fetch initial liked status
-        const fetchLikeStatus = async () => {
-            try {
-                const response = await axios.get(`/diaries/${diary_id}/like`);
-                setLiked(response.data.liked);
-            } catch (error) {
-                console.error('Failed to fetch like status', error);
-            }
-        };
-        fetchLikeStatus();
-    }, [diary_id]);
-
-    useEffect(() => {
-        const fetchUserProfile = async () => {
-            try {
-                const response = await axios.get('/user/profile'); // 사용자 프로필 정보를 가져오는 API 엔드포인트
-                setCurrentUserProfile({
-                    profileImage: response.data.profile_img,
-                    nickname: response.data.user_nick
-                });
-            } catch (err) {
-                console.error('Failed to fetch user profile', err);
-            }
-        };
-
-        fetchUserProfile();
-    }, []);
-
-    const [reportPopupVisible, setReportPopupVisible] = useState(false);
-
-    const handleReportButtonClick = () => {
-        setReportPopupVisible(true);
-    };
-
-    const handleCloseReportPopup = () => {
-        setReportPopupVisible(false);
-    };
-
-    if (loading) return <div className="diary-popup">Loading...</div>;
-    if (error) return <div className="diary-popup">{error}</div>;
 
     const handleBackgroundClick = (e) => {
         if (e.target === e.currentTarget) {
@@ -154,27 +91,32 @@ const ForestPopup = ({ diary_id, onClose }) => {
                 diary_id: diary_id,
             };
 
+            // 서버에 댓글 추가
             try {
-                const response = await fetch(`/comments/${diary_id}/comments`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(newCommentData),
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to submit comment');
-                }
-
-                const createdComment = await response.json();
+                const response = await axios.post(`/comments/${diary_id}/comments`, newCommentData);
+                const createdComment = response.data; // 서버에서 반환된 댓글 데이터
                 setComments([...comments, createdComment]);
                 setNewComment("");
             } catch (err) {
-                setError(err.message);
+                setError('Failed to submit comment');
+                console.error(err);
             }
         }
     };
+
+    const [reportPopupVisible, setReportPopupVisible] = useState(false);
+
+    const handleReportButtonClick = () => {
+        setReportPopupVisible(true);
+    };
+
+    const handleCloseReportPopup = () => {
+        setReportPopupVisible(false);
+    };
+
+    if (loading) return <div className="diary-popup">Loading...</div>;
+    if (error) return <div className="diary-popup">{error}</div>;
+    
 
     const handleEditClick = (comment_id) => {
         setEditingcomment_id(comment_id);
@@ -240,10 +182,10 @@ const ForestPopup = ({ diary_id, onClose }) => {
         } catch (error) {
             console.error('Failed to update like status', error);
         }
-    };    
+    };
 
     const EmptyHeart = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9FC393" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
         </svg>
     );
@@ -370,7 +312,6 @@ const ForestPopup = ({ diary_id, onClose }) => {
             {reportPopupVisible && <ReportPopup onClose={handleCloseReportPopup} />}
         </div>
     );
-
 };
 
 export default ForestPopup;

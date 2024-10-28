@@ -107,7 +107,7 @@ const SignUp = () => {
             };
     
             try {
-                const response = await fetch('http://localhost:3001/register', {
+                const response = await fetch('https://api.usdiary.site/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -137,7 +137,7 @@ const SignUp = () => {
     
     const handleCodeVerification = async () => {
         try {
-            const response = await fetch('http://localhost:3001/register/verify-code', {
+            const response = await fetch('https://api.usdiary.site/register/verify-code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -193,7 +193,7 @@ const SignUp = () => {
 
     const handleIdCheck = async () => {
         try {
-            const response = await fetch(`http://localhost:3001/register/idcheck?uid=${formData.sign_id}`, {
+            const response = await fetch(`https://api.usdiary.site/register/idcheck?uid=${formData.sign_id}`, {
                 method: 'GET',
             });
 
@@ -217,7 +217,7 @@ const SignUp = () => {
 
     const handleNicknameCheck = async () => {
         try {
-            const response = await fetch(`http://localhost:3001/register/nicknamecheck?unick=${formData.user_nick}`, {
+            const response = await fetch(`https://api.usdiary.site/register/nicknamecheck?unick=${formData.user_nick}`, {
                 method: 'GET',
             });
 
