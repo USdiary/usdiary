@@ -12,126 +12,118 @@ const Forest = () => {
     const [diaries, setDiaries] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageGroup, setPageGroup] = useState(0);
-    const diariesPerPage = 12;
-    const pagesPerGroup = 5;
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false); // Add a loading state
     const [error, setError] = useState(null); // Add an error state
     const [selectedDiaryId, setSelectedDiaryId] = useState(null);
     const [filter, setFilter] = useState('latest');
+    const [user_id, setUserId] = useState(null);
     const baseURL = 'https://api.usdiary.site';
 
-    const token = localStorage.getItem('token'); // 'token'은 로컬 스토리지에 저장된 토큰의 키입니다.
-    let user_id = null;
-
-    if (token) {
-        try {
-            user_id = jwtDecode(token).user_id; // 유효한 토큰일 경우에만 user_id 설정
-        } catch (error) {
-            console.error('Failed to decode token:', error);
-        }
-    }
+    const diariesPerPage = 12;
+    const pagesPerGroup = 5;
 
     useEffect(() => {
-        let isCancelled = false;
-
-        const fetchData = async () => {
+        const token = localStorage.getItem('token');
+        if (token) {
             try {
-                setLoading(true);
-                const board_id = 1;
+                const decodedToken = jwtDecode(token);
+                setUserId(decodedToken.user_id);
+            } catch (error) {
+                console.error('Failed to decode token:', error);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const board_id = 1; // 필터링할 게시판 ID
                 let response;
 
-                // 필터에 따라 API 호출 결정
                 if (filter === 'latest') {
-                    response = await axios.get('/diaries', {
-                        params: {
-                            page: currentPage,
-                            limit: diariesPerPage,
-                            board_id: board_id
-                        }
+                    response = await axios.get(`${baseURL}/diaries`, {
+                        params: { page: currentPage, limit: diariesPerPage, board_id }
                     });
                 } else if (filter === 'topLikes') {
-                    response = await axios.get('/diaries/weekly-likes', {  // 수정된 부분
-                        params: {
-                            page: currentPage,
-                            limit: diariesPerPage,
-                            board_id: board_id
-                        }
+                    response = await axios.get(`${baseURL}/diaries/weekly-likes`, {
+                        params: { page: currentPage, limit: diariesPerPage, board_id }
                     });
-                } else if (filter === 'topViews') {  // Top Views 필터에 대한 API 호출 추가
-                    response = await axios.get('/diaries/weekly-views', {
-                        params: {
-                            page: currentPage,
-                            limit: diariesPerPage,
-                            board_id: board_id
-                        }
+                } else if (filter === 'topViews') {
+                    response = await axios.get(`${baseURL}/diaries/weekly-views`, {
+                        params: { page: currentPage, limit: diariesPerPage, board_id }
                     });
                 }
 
-                const total = response.data.totalDiaries;
-                const diaries = response.data.data.diary;
-                if (!isCancelled) {
-                    setDiaries(diaries);
-                    setTotalPages(Math.ceil(total / diariesPerPage));
+                const { data: { totalDiaries, diary: diariesData } } = response.data;
+                setDiaries(diariesData || []);
+
+                const calculatedTotalPages = Math.ceil(totalDiaries / diariesPerPage);
+                setTotalPages(calculatedTotalPages || 1);
+
+                if (currentPage > calculatedTotalPages) {
+                    setCurrentPage(calculatedTotalPages);
                 }
+
             } catch (error) {
-                if (!isCancelled) setError('Failed to load data');
+                console.error('Error fetching data:', error);
+                setError('Failed to load data');
             } finally {
-                if (!isCancelled) setLoading(false);
+                setLoading(false);
             }
         };
+
         fetchData();
-        return () => {
-            isCancelled = true;
-        };
     }, [currentPage, filter]);
 
-    useEffect(() => {
-        if (currentPage > totalPages) {
-            setCurrentPage(totalPages);
-        }
-    }, [currentPage, totalPages]);
-
-    const indexOfLastDiary = currentPage * diariesPerPage;
-    const indexOfFirstDiary = indexOfLastDiary - diariesPerPage;
-    const currentDiaries = diaries.slice(indexOfFirstDiary, indexOfLastDiary);
-
+    // 페이지네이션 조정 로직
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
+        const newPageGroup = Math.floor((pageNumber - 1) / pagesPerGroup);
+        setPageGroup(newPageGroup);
     };
 
     const handleNextGroup = () => {
-        if (pageGroup * pagesPerGroup + pagesPerGroup < totalPages) {
-            setPageGroup(pageGroup + 1);
-            setCurrentPage(pageGroup * pagesPerGroup + pagesPerGroup + 1);
+        const nextPageGroup = pageGroup + 1;
+        const firstPageOfNextGroup = nextPageGroup * pagesPerGroup + 1;
+
+        if (firstPageOfNextGroup <= totalPages) {
+            setPageGroup(nextPageGroup);
+            setCurrentPage(firstPageOfNextGroup);
         }
     };
 
     const handlePrevGroup = () => {
         if (pageGroup > 0) {
-            setPageGroup(pageGroup - 1);
-            setCurrentPage(pageGroup * pagesPerGroup);
+            const prevPageGroup = pageGroup - 1;
+            const lastPageOfPrevGroup = (prevPageGroup + 1) * pagesPerGroup;
+            setPageGroup(prevPageGroup);
+            setCurrentPage(Math.min(lastPageOfPrevGroup, totalPages));
         }
     };
 
+    // 페이지 그룹 생성
     const pageNumbers = Array.from(
         { length: Math.min(pagesPerGroup, totalPages - pageGroup * pagesPerGroup) },
         (_, index) => pageGroup * pagesPerGroup + index + 1
-    );
+    ).filter(number => number <= totalPages); // totalPages 초과 필터링
+
+
 
     const handleDiaryClick = (diary_id) => {
-        console.log("Diary clicked:", diary_id);
-        setSelectedDiaryId(diary_id); // 클릭한 다이어리 ID를 설정
+        setSelectedDiaryId(diary_id);
     };
 
     const handleClosePopup = () => {
-        setSelectedDiaryId(null); // 팝업 닫기
+        setSelectedDiaryId(null);
     };
 
     const handleFilterChange = (newFilter) => {
-        setFilter(newFilter); // 선택한 필터로 상태 업데이트
-        setCurrentPage(1); // 페이지를 1로 초기화
-        setPageGroup(0); // 페이지 그룹 초기화
+        // 필터 변경 시 페이지와 그룹을 초기화
+        setFilter(newFilter);
+        setCurrentPage(1);
+        setPageGroup(0);
     };
 
     return (
@@ -153,13 +145,13 @@ const Forest = () => {
                     <div className="forest-page__diary-cards">
                         {loading && <p>Loading...</p>}
                         {error && <p>{error}</p>}
-                        {!loading && !error && currentDiaries.map((diary) => (
+                        {!loading && !error && diaries.map((diary) => (
                             <DiaryCard
                                 key={diary.diary_id}
                                 diary_title={diary.diary_title}  // title → diary_title
                                 createdAt={diary.createdAt}       // date → createdAt
                                 diary_content={diary.diary_content.substring(0, 20) + ' ...'}  // summary → diary_content
-                                post_photo={`${baseURL}${diary.post_photo}`}    // imageUrl → post_photo
+                                post_photo={`${baseURL}/${diary.post_photo}`}    // imageUrl → post_photo
                                 board_name={diary.Board.board_name}     // boardName → board_name
                                 user_nick={diary.User.user_nick}        // nickname → user_nick
                                 like_count={diary.like_count}

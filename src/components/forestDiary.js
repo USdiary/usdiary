@@ -92,6 +92,12 @@ const ForestComponent = () => {
   };
 
   const handleSubmit = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
     if (!diary_title || !diary_content) {
       alert("제목과 내용을 모두 입력해주세요.");
       return;
@@ -103,12 +109,20 @@ const ForestComponent = () => {
       diary_content: diary_content,
       access_level: access_level,
       post_photo: post_photo,
-      board_id: 2
+      board_id: 1
     };
 
     try {
-      const response = await axios.post('/diaries', diaryData); // axios로 POST 요청
-      console.log('저장 완료:', response.data);
+      const response = await fetch('https://api.usdiary.site/diaries', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(diaryData), // 서버로 데이터 전송
+      });
+      const result = await response.json();
+      console.log('저장 완료:', result);
       navigate('/forest');
     } catch (error) {
       console.error("Error submitting diary:", error);
@@ -136,7 +150,7 @@ const ForestComponent = () => {
       formData.append('access_level', updatedDiary.access_level);
       formData.append('post_photo', updatedDiary.post_photo);
 
-      const response = await fetch(`/diaries/${diary.diary_id}`, {
+      const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'PATCH',
         body: formData,
       });
@@ -155,7 +169,7 @@ const ForestComponent = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/diaries/${diary.diary_id}`, {
+      const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'DELETE',
       });
 

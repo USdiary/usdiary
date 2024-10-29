@@ -101,7 +101,7 @@ const SeaComponent = () => {
       diary_content: diary_content,
       access_level: access_level,
       post_photo: post_photo,
-      board_id: 2
+      board_id: 3
     };
 
     try {
@@ -134,7 +134,7 @@ const SeaComponent = () => {
       formData.append('access_level', updatedDiary.access_level);
       formData.append('post_photo', updatedDiary.post_photo);
 
-      const response = await fetch(`/diaries/${diary.diary_id}`, {
+      const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'PATCH',
         body: formData,
       });
@@ -153,7 +153,7 @@ const SeaComponent = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/diaries/${diary.diary_id}`, {
+      const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'DELETE',
       });
 
