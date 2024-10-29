@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Forest from "./forest";
 import City from "./city";
@@ -6,6 +6,18 @@ import City from "./city";
 const Home = () => {
     const location = useLocation();
     const userTendency = location.state?.userTendency; // location.state에서 userTendency 가져오기
+
+    useEffect(() => {
+        if (userTendency) {
+            localStorage.setItem('selectedMenu', userTendency === '숲' ? 'forest' : userTendency === '도시' ? 'city' : 'sea');
+        }
+    }, [userTendency]);
+
+    useEffect(() => {
+        if (userTendency) {
+            localStorage.setItem('userTendency', userTendency);
+        }
+    }, [userTendency]);
 
     if (userTendency === '숲') {
         return <Forest />;
