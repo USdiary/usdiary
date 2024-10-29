@@ -11,7 +11,7 @@ import axios from "axios";
 const Forest = () => {
     const [diaries, setDiaries] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageGroup, setPageGroup] = useState(1);
+    const [pageGroup, setPageGroup] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false); // Add a loading state
     const [error, setError] = useState(null); // Add an error state
@@ -36,90 +36,80 @@ const Forest = () => {
     }, []);
 
     useEffect(() => {
-        let isCancelled = false;
-
         const fetchData = async () => {
+            setLoading(true);
             try {
-                setLoading(true);
                 const board_id = 1; // 필터링할 게시판 ID
                 let response;
 
-                // 필터에 따라 API 호출
                 if (filter === 'latest') {
-                    response = await axios.get(`https://api.usdiary.site/diaries`, {
-                        params: {
-                            page: currentPage,
-                            limit: diariesPerPage,
-                            board_id: board_id
-                        }
+                    response = await axios.get(`${baseURL}/diaries`, {
+                        params: { page: currentPage, limit: diariesPerPage, board_id }
                     });
                 } else if (filter === 'topLikes') {
-                    response = await axios.get(`https://api.usdiary.site/diaries/weekly-likes`, {
-                        params: {
-                            page: currentPage,
-                            limit: diariesPerPage,
-                            board_id: board_id
-                        }
+                    response = await axios.get(`${baseURL}/diaries/weekly-likes`, {
+                        params: { page: currentPage, limit: diariesPerPage, board_id }
                     });
                 } else if (filter === 'topViews') {
-                    response = await axios.get(`https://api.usdiary.site/diaries/weekly-views`, {
-                        params: {
-                            page: currentPage,
-                            limit: diariesPerPage,
-                            board_id: board_id
-                        }
+                    response = await axios.get(`${baseURL}/diaries/weekly-views`, {
+                        params: { page: currentPage, limit: diariesPerPage, board_id }
                     });
                 }
 
-                const total = response.data.totalDiaries; // 전체 일기 수
-                const diaries = response.data.data.diary; // 일기 목록
-                if (!isCancelled) {
-                    setDiaries(diaries);
-                    setTotalPages(Math.ceil(total / diariesPerPage)); // 총 페이지 수 계산
-                    // 현재 페이지가 totalPages보다 크면 currentPage를 totalPages로 설정
-                    if (currentPage > totalPages) {
-                        setCurrentPage(totalPages);
-                    }
+                const { data: { totalDiaries, diary: diariesData } } = response.data;
+                setDiaries(diariesData || []);
+
+                const calculatedTotalPages = Math.ceil(totalDiaries / diariesPerPage);
+                setTotalPages(calculatedTotalPages || 1);
+
+                if (currentPage > calculatedTotalPages) {
+                    setCurrentPage(calculatedTotalPages);
                 }
+
             } catch (error) {
                 console.error('Error fetching data:', error);
-                if (!isCancelled) setError('Failed to load data');
+                setError('Failed to load data');
             } finally {
-                if (!isCancelled) setLoading(false);
+                setLoading(false);
             }
         };
+
         fetchData();
-        return () => {
-            isCancelled = true;
-        };
     }, [currentPage, filter]);
 
-    const indexOfLastDiary = currentPage * diariesPerPage;
-    const indexOfFirstDiary = indexOfLastDiary - diariesPerPage;
-    const currentDiaries = diaries.slice(indexOfFirstDiary, indexOfLastDiary);
-
+    // 페이지네이션 조정 로직
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
+        const newPageGroup = Math.floor((pageNumber - 1) / pagesPerGroup);
+        setPageGroup(newPageGroup);
     };
 
     const handleNextGroup = () => {
-        if (pageGroup * pagesPerGroup + pagesPerGroup < totalPages) {
-            setPageGroup(pageGroup + 1);
-            setCurrentPage(pageGroup * pagesPerGroup + pagesPerGroup + 1);
+        const nextPageGroup = pageGroup + 1;
+        const firstPageOfNextGroup = nextPageGroup * pagesPerGroup + 1;
+
+        if (firstPageOfNextGroup <= totalPages) {
+            setPageGroup(nextPageGroup);
+            setCurrentPage(firstPageOfNextGroup);
         }
     };
 
     const handlePrevGroup = () => {
         if (pageGroup > 0) {
-            setPageGroup(pageGroup - 1);
-            setCurrentPage(pageGroup * pagesPerGroup);
+            const prevPageGroup = pageGroup - 1;
+            const lastPageOfPrevGroup = (prevPageGroup + 1) * pagesPerGroup;
+            setPageGroup(prevPageGroup);
+            setCurrentPage(Math.min(lastPageOfPrevGroup, totalPages));
         }
     };
 
+    // 페이지 그룹 생성
     const pageNumbers = Array.from(
         { length: Math.min(pagesPerGroup, totalPages - pageGroup * pagesPerGroup) },
         (_, index) => pageGroup * pagesPerGroup + index + 1
-    );
+    ).filter(number => number <= totalPages); // totalPages 초과 필터링
+
+
 
     const handleDiaryClick = (diary_id) => {
         setSelectedDiaryId(diary_id);
@@ -130,6 +120,7 @@ const Forest = () => {
     };
 
     const handleFilterChange = (newFilter) => {
+        // 필터 변경 시 페이지와 그룹을 초기화
         setFilter(newFilter);
         setCurrentPage(1);
         setPageGroup(0);
@@ -154,7 +145,7 @@ const Forest = () => {
                     <div className="forest-page__diary-cards">
                         {loading && <p>Loading...</p>}
                         {error && <p>{error}</p>}
-                        {!loading && !error && currentDiaries.map((diary) => (
+                        {!loading && !error && diaries.map((diary) => (
                             <DiaryCard
                                 key={diary.diary_id}
                                 diary_title={diary.diary_title}  // title → diary_title

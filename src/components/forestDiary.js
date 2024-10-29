@@ -97,7 +97,7 @@ const ForestComponent = () => {
       alert("로그인이 필요합니다.");
       return;
     }
-    
+
     if (!diary_title || !diary_content) {
       alert("제목과 내용을 모두 입력해주세요.");
       return;
@@ -109,7 +109,7 @@ const ForestComponent = () => {
       diary_content: diary_content,
       access_level: access_level,
       post_photo: post_photo,
-      board_id: 2
+      board_id: 1
     };
 
     try {

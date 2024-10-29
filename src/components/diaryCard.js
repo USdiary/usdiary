@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import '../assets/css/diaryCard.css';
 import axios from 'axios';
+import defaultImg from '../assets/images/default.png';
 
 const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nick, board_name, isFriendPage, diary_id, user_id, onClick }) => {
     const [liked, setLiked] = useState(false);
@@ -80,7 +81,11 @@ const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nic
                     {liked ? <FilledHeart /> : <EmptyHeart />}
                 </span>
             </div>
-            <img src={post_photo && post_photo !== '' ? post_photo : '../assets/images/default.png'} alt={diary_title} className="diary-image" />
+            <img
+                src={post_photo ? post_photo : defaultImg}
+                alt={diary_title}
+                className="diary-image"
+            />
             <div className="diary-content">
                 <h2 className="diary-title">{diary_title}</h2>
                 <p className="diary-date">{formattedDate}</p>
