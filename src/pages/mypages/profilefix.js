@@ -105,7 +105,7 @@ const ProfileFix = () => {
                 {/* 아이디 */}
                 <div className="fix_form-group">
                   <label htmlFor="username">아이디 *</label>
-                  <input type="text" id="username" className="fix_form-input" style={{ backgroundColor: '#EEEEEE', color: '#FFFFFF' }} disabled />
+                  <input type="text" id="sign_id" className="fix_form-input" style={{ backgroundColor: '#EEEEEE', color: '#FFFFFF' }} disabled />
                 </div>
 
                 {/* 비밀번호 */}

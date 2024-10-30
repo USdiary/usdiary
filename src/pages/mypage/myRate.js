@@ -54,7 +54,7 @@ const MyRate = () => {
 
     const fetchDiaries = async (user_id) => {
         try {
-            const response = await axios.get(`/diaries?user_id=${user_id}`);
+            const response = await axios.get(`/mypage/diaries?user_id=${user_id}`);
             setDiaryCards(response.data)
         } catch (error) {
             console.error('일기를 가져오는 중 오류 발생:', error);
@@ -180,7 +180,7 @@ const MyRate = () => {
                     <div className='profile-info'>
                         {user ? (
                             <>
-                                <img src={user.Profile.profile_img} alt='Profile' className='profile-image' />
+                                {/* <img src={user.Profile.profile_img} alt='Profile' className='profile-image' /> */}
                                 <div className='profile-summary'>
                                     <h3 className='profile-tendency'>{user.user_nick}님은 {percentage}% {user.user_tendency} 성향이에요</h3>
                                     <div className='progress-bar'>
