@@ -2,10 +2,25 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import '../assets/css/diaryCard.css';
 import axios from 'axios';
+import defaultImg from '../assets/images/default.png';
 
-const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nick, board_name, isFriendPage, diary_id, like_count, onClick }) => {
+const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nick, board_name, isFriendPage, diary_id, user_id, onClick }) => {
     const [liked, setLiked] = useState(false);
-    const [likeCount, setLikeCount] = useState(like_count);  // 초기 값으로 props로 받은 like_count 사용
+
+    /*
+    useEffect(() => {
+        const fetchLikeStatus = async () => {
+            try {
+                const response = await axios.get(`/diaries/${diary_id}/like/status`, { params: { user_id } });
+                if (response.status === 200) {
+                    setLiked(response.data.liked);
+                }
+            } catch (error) {
+                console.error('Failed to fetch like status', error);
+            }
+        };
+        fetchLikeStatus();
+    }, [diary_id, user_id]); */
 
     const formatDate = (date) => {
         if (!date) return 'Invalid date';  // date가 없으면 기본 메시지 반환
@@ -26,7 +41,6 @@ const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nic
             if (response.status === 200) {
                 // 좋아요 상태 변경 및 좋아요 개수 업데이트
                 setLiked(!liked);
-                setLikeCount(likeCount + (liked ? -1 : 1));  // 좋아요 취소 시 -1, 추가 시 +1
             }
         } catch (error) {
             console.error('Failed to update like status', error);
@@ -66,9 +80,12 @@ const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nic
                 <span className="diary-like" onClick={toggleLike}>
                     {liked ? <FilledHeart /> : <EmptyHeart />}
                 </span>
-                <span className="diary-like-count">{likeCount}</span> {/* 좋아요 개수 표시 */}
             </div>
-            <img src={post_photo || '../assets/images/default.png'} alt={diary_title} className="diary-image" />
+            <img
+                src={post_photo ? post_photo : defaultImg}
+                alt={diary_title}
+                className="diary-image"
+            />
             <div className="diary-content">
                 <h2 className="diary-title">{diary_title}</h2>
                 <p className="diary-date">{formattedDate}</p>
@@ -88,7 +105,7 @@ DiaryCard.propTypes = {
     user_nick: PropTypes.string.isRequired,
     isFriendPage: PropTypes.bool,
     diary_id: PropTypes.number.isRequired,
-    like_count: PropTypes.number.isRequired,  // like_count 추가
+    user_id: PropTypes.number.isRequired,
     onClick: PropTypes.func.isRequired,
 };
 

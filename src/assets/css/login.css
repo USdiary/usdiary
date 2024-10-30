@@ -53,7 +53,7 @@
 }
 
 .menu .button {
-    width: 410px;
+    width: 450px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -116,6 +116,24 @@
 }
 
 .menu .button #alarm:hover .alarm_black {
+    display: block;
+}
+
+.menu .button #logout {
+    width: 29px;
+    position: relative;
+}
+
+.menu .button #logout img {
+    width: 18px;
+}
+
+.menu .button #logout .logout_black {
+    position: absolute;
+    display: none;
+}
+
+.menu .button #logout:hover .logout_black {
     display: block;
 }
 

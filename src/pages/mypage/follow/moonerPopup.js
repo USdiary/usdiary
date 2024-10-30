@@ -40,7 +40,7 @@ const MoonerPopup = ({ follower, onClose }) => {
     
     const updateRelationship = async (newRelationshipStatus) => {
         try {
-            await axios.post('http://localhost:3001/mypage/follow', {
+            await axios.post('https://localhost:3001/mypage/follow', {
                 requested_sign_id: follower.User,
             });
             setRelationship(newRelationshipStatus);

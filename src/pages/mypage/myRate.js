@@ -54,12 +54,20 @@ const MyRate = () => {
 
     const fetchDiaries = async (user_id) => {
         try {
-            const response = await axios.get(`/mypage/diaries?user_id=${user_id}`);
-            setDiaryCards(response.data)
+            const response = await axios.get(`/diaries?user_id=${user_id}`);
+            // 서버 응답이 배열인지 확인
+            if (Array.isArray(response.data)) {
+                setDiaryCards(response.data);
+            } else {
+                console.error('일기 데이터 형식이 잘못되었습니다:', response.data);
+                setDiaryCards([]); // 빈 배열로 초기화
+            }
         } catch (error) {
             console.error('일기를 가져오는 중 오류 발생:', error);
+            setDiaryCards([]); // 오류 발생 시 빈 배열로 초기화
         }
     };
+    
 
     if (!user) {
         return <div>Loading...</div>; // 사용자 데이터 로딩 중
@@ -180,7 +188,7 @@ const MyRate = () => {
                     <div className='profile-info'>
                         {user ? (
                             <>
-                                {/* <img src={user.Profile.profile_img} alt='Profile' className='profile-image' /> */}
+                                <img src={user.Profile ? user.Profile.profile_img : defaultImage} alt='Profile' className='profile-image' />
                                 <div className='profile-summary'>
                                     <h3 className='profile-tendency'>{user.user_nick}님은 {percentage}% {user.user_tendency} 성향이에요</h3>
                                     <div className='progress-bar'>

@@ -26,7 +26,7 @@ const SeaComponent = () => {
 
   const fetchDiaryData = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/diaries?date=${selectedDate.toISOString().split('T')[0]}`); // axios로 API 요청
+      const response = await axios.get(`/diaries?date=${selectedDate.toISOString().split('T')[0]}`); // axios로 API 요청
       const data = response.data;
       setDiaryData(data); // 불러온 데이터 설정
       setTitle(data.diary_title); // 제목 업데이트
@@ -90,6 +90,11 @@ const SeaComponent = () => {
   };
 
   const handleSubmit = async () => {
+    if (!diary_title || !diary_content) {
+      alert("제목과 내용을 모두 입력해주세요.");
+      return;
+    }
+
     const diaryData = {
       createdAt: selectedDate,
       diary_title: diary_title,
@@ -100,15 +105,9 @@ const SeaComponent = () => {
     };
 
     try {
-      const response = await fetch('/diaries', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(diaryData), // 서버로 데이터 전송
-      });
-      const result = await response.json();
-      console.log('저장 완료:', result);
+      const response = await axios.post('/diaries', diaryData); // axios로 POST 요청
+      console.log('저장 완료:', response.data);
+      navigate('/sea');
     } catch (error) {
       console.error("Error submitting diary:", error);
     }
@@ -135,7 +134,7 @@ const SeaComponent = () => {
       formData.append('access_level', updatedDiary.access_level);
       formData.append('post_photo', updatedDiary.post_photo);
 
-      const response = await fetch(`/diaries/${diary.diary_id}`, {
+      const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'PATCH',
         body: formData,
       });
@@ -154,7 +153,7 @@ const SeaComponent = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/diaries/${diary.diary_id}`, {
+      const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'DELETE',
       });
 

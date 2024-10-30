@@ -27,7 +27,7 @@ const ForestComponent = () => {
   // Axios로 다이어리 데이터 fetch
   const fetchDiaryData = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/diaries`, {
+      const response = await axios.get(`/diaries`, {
         params: { date: selectedDate.toISOString().split('T')[0] } // 날짜를 query parameter로 전달
       });
       setDiaryData(response.data); // 불러온 데이터 설정
@@ -92,8 +92,16 @@ const ForestComponent = () => {
   };
 
   const handleSubmit = async () => {
-    // 로컬 스토리지에서 토큰 가져오기
     const token = localStorage.getItem('token');
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    if (!diary_title || !diary_content) {
+      alert("제목과 내용을 모두 입력해주세요.");
+      return;
+    }
 
     const diaryData = {
       createdAt: selectedDate,
@@ -105,7 +113,7 @@ const ForestComponent = () => {
     };
 
     try {
-      const response = await fetch('/diaries', {
+      const response = await fetch('https://api.usdiary.site/diaries', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -115,6 +123,7 @@ const ForestComponent = () => {
       });
       const result = await response.json();
       console.log('저장 완료:', result);
+      navigate('/forest');
     } catch (error) {
       console.error("Error submitting diary:", error);
     }
@@ -141,7 +150,7 @@ const ForestComponent = () => {
       formData.append('access_level', updatedDiary.access_level);
       formData.append('post_photo', updatedDiary.post_photo);
 
-      const response = await fetch(`/diaries/${diary.diary_id}`, {
+      const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'PATCH',
         body: formData,
       });
@@ -160,7 +169,7 @@ const ForestComponent = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/diaries/${diary.diary_id}`, {
+      const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'DELETE',
       });
 

@@ -20,7 +20,7 @@ function ForestTendency() {
           throw new Error('No token found');
         }
 
-        const response = await fetch('http://localhost:3001/users/me', {
+        const response = await fetch('https://api.usdiary.site/users/me', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

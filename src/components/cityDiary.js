@@ -27,7 +27,7 @@ const CityComponent = () => {
     // fetchDiaryData에서 axios 사용
     const fetchDiaryData = useCallback(async () => {
         try {
-            const response = await axios.get(`/api/diaries?date=${selectedDate.toISOString().split('T')[0]}`); // axios로 요청
+            const response = await axios.get(`/diaries?date=${selectedDate.toISOString().split('T')[0]}`); // axios로 요청
             setDiaryData(response.data); // 불러온 데이터 설정
             setTitle(response.data.diary_title); // 제목 업데이트
             if (editorRef.current) {
@@ -89,23 +89,30 @@ const CityComponent = () => {
     }
   };
 
-    const handleSubmit = async () => {
-        const diaryData = {
-            createdAt: selectedDate,
-            diary_title: diary_title,
-            diary_content: diary_content,
-            access_level: access_level,
-            post_photo: post_photo,
-            board_id: 2
-        };
+  const handleSubmit = async () => {
+    if (!diary_title || !diary_content) {
+      alert("제목과 내용을 모두 입력해주세요.");
+      return;
+    }
 
-        try {
-            const response = await axios.post('/diaries', diaryData); // axios로 POST 요청
-            console.log('저장 완료:', response.data);
-        } catch (error) {
-            console.error("Error submitting diary:", error);
-        }
+    const diaryData = {
+      createdAt: selectedDate,
+      diary_title: diary_title,
+      diary_content: diary_content,
+      access_level: access_level,
+      post_photo: post_photo,
+      board_id: 2
     };
+
+    try {
+      const response = await axios.post('/diaries', diaryData); // axios로 POST 요청
+      console.log('저장 완료:', response.data);
+      navigate('/city');
+    } catch (error) {
+      console.error("Error submitting diary:", error);
+    }
+  };
+
 
   const handleEdit = () => {
     setIsEditing(true); // 편집 모드로 전환
@@ -128,7 +135,7 @@ const CityComponent = () => {
       formData.append('access_level', updatedDiary.access_level);
       formData.append('post_photo', updatedDiary.post_photo);
 
-      const response = await fetch(`/diaries/${diary.diary_id}`, {
+      const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'PATCH',
         body: formData,
       });
@@ -147,7 +154,7 @@ const CityComponent = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/diaries/${diary.diary_id}`, {
+      const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'DELETE',
       });
 

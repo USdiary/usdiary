@@ -14,7 +14,7 @@ const NotificationDetail = () => {
     useEffect(() => {
         const fetchNotification = async () => {
             try {
-                const response = await fetch('/api/notices', {
+                const response = await fetch('https://api.usdiary.site/notices', {
                     method: 'GET',
                 });
 
