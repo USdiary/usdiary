@@ -39,6 +39,7 @@ const ProfilePage = () => {
     }
 
     const userDataFromToken = JSON.parse(atob(base64UrlToBase64(tokenParts[1])));
+    console.log('데이터', userDataFromToken);
     setUserData(userDataFromToken);
   }, []);
 
@@ -57,11 +58,11 @@ const ProfilePage = () => {
     }
 
     // 서버에 비밀번호 확인 요청
-    const response = await fetch('https://api.usdiary.site/verify-password', {
+    const response = await fetch('/users/check-password', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': token, // JWT 토큰을 헤더에 포함
+        'Authorization': `Bearer ${token}`, 
       },
       body: JSON.stringify({ password }), // 비밀번호 전송
     });
