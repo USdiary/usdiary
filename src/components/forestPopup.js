@@ -4,6 +4,7 @@ import miniTreeImage from '../assets/images/minitree.png';
 import sirenIcon from '../assets/images/siren_forest.png';
 import axios from 'axios';
 import ReportPopup from './reportPopup';
+import { jwtDecode } from 'jwt-decode';
 
 const ForestPopup = ({ diary_id, onClose }) => {
     const [diary, setDiary] = useState(null);
@@ -22,50 +23,125 @@ const ForestPopup = ({ diary_id, onClose }) => {
     });
 
     useEffect(() => {
+        const token = localStorage.getItem('token'); // 토큰 가져오기
+        if (token) {
+            const decoded = jwtDecode(token);
+            setCurrentUserProfile({
+                profile_img: decoded.profile_img,
+                user_nick: decoded.user_nick
+            });
+        }
+
         const fetchDiaryData = async () => {
             try {
-                const diaryResponse = await axios.get(`/diaries/${diary_id}`);
-                setDiary(diaryResponse.data);
+                const diaryResponse = await axios.get(`/diaries/${diary_id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                setDiary(diaryResponse.data); // API에서 200 응답시 diary 데이터 설정
             } catch (err) {
-                setError('Failed to fetch diary data');
-                console.error(err);
+                if (err.response && err.response.status === 404) {
+                    setError('일기를 찾을 수 없습니다.');
+                } else {
+                    setError('일기 데이터를 불러오는 데 실패했습니다.');
+                }
+                console.error("Error fetching diary data:", err.response ? err.response.data : err.message);
             }
         };
-
+    
         const fetchQuestionData = async () => {
             try {
-                const questionResponse = await axios.get(`/questions/${diary_id}`);
-                setQuestionData(questionResponse.data);
+                const questionResponse = await axios.get(
+                    `/contents/questions/today`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                        timeout: 10000,
+                    }
+                );
+                setQuestionData(questionResponse.data); // API에서 200 응답시 question 데이터 설정
             } catch (err) {
-                setError('Failed to fetch question data');
-                console.error(err);
+                if (err.response && err.response.status === 500) {
+                    setError('서버 오류로 인해 오늘의 질문을 불러오는 데 실패했습니다.');
+                } else {
+                    setError('오늘의 질문을 불러오는 데 실패했습니다.');
+                }
+                console.error("Error fetching today's question:", err);
+            }
+        };        
+
+        const fetchAnswerData = async () => {
+            try {
+                const answerResponse = await axios.get(`/contents/questions/${questionData?.question_id}/answers`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                setAnswerData(answerResponse.data);
+            } catch (err) {
+                setError('답변 데이터를 불러오는 데 실패했습니다.');
+                console.error("Error fetching answers data:", err);
             }
         };
-
+    
         const fetchComments = async () => {
             try {
-                const commentsResponse = await axios.get(`/diaries/${diary_id}/comments`);
-                setComments(commentsResponse.data);
+                const commentsResponse = await axios.get(
+                    `/comments/${diary_id}/comments`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+        
+                // 댓글 데이터가 빈 배열인 경우, "댓글이 없습니다"라는 메시지 설정
+                if (!commentsResponse.data.data || commentsResponse.data.data.length === 0) {
+                    console.log('No comments found for this diary.');
+                    setError('댓글이 없습니다.');
+                    setComments([]); // 댓글 데이터를 빈 배열로 설정
+                } else {
+                    setComments(commentsResponse.data.data); // 성공 시 comments 데이터 설정
+                }
             } catch (err) {
-                setError('Failed to fetch comments');
-                console.error(err);
+                if (err.code === 'ECONNABORTED') {
+                    setError('서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.');
+                } else if (err.response?.status === 504) {
+                    setError('서버 게이트웨이 시간 초과로 인해 데이터를 불러오지 못했습니다.');
+                } else if (err.response?.status === 404) {
+                    setError('댓글 또는 일기를 찾을 수 없습니다.');
+                } else if (err.response?.status === 500) {
+                    setError('서버 오류로 인해 댓글을 불러오는 데 실패했습니다.');
+                } else {
+                    setError('댓글을 불러오는 데 실패했습니다.');
+                }
+                console.error('Error fetching comments:', err);
             }
-        };
+        };        
+        
+        
 
         const fetchAllData = async () => {
             setLoading(true);
-            await Promise.all([
-                fetchDiaryData(),
-                fetchQuestionData(),
-                fetchComments()
-            ]);
-            setLoading(false);
+            try {
+                await Promise.all([
+                    fetchDiaryData(),
+                    fetchQuestionData(),
+                    fetchComments()
+                ]);
+                await fetchAnswerData();
+            } catch (error) {
+                console.error("Error in fetching all data:", error);
+            } finally {
+                setLoading(false);
+            }
         };
 
         fetchAllData();
 
         // 팝업이 뜨면 배경 스크롤 방지
-        document.body.style.overflow = 'hidden';
 
         // 팝업이 닫히면 배경 스크롤 복원
         return () => {
@@ -94,8 +170,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
             // 서버에 댓글 추가
             try {
                 const response = await axios.post(`/comments/${diary_id}/comments`, newCommentData);
-                const createdComment = response.data; // 서버에서 반환된 댓글 데이터
-                setComments([...comments, createdComment]);
+                setComments([...comments, response.data]);
                 setNewComment("");
             } catch (err) {
                 setError('Failed to submit comment');
@@ -116,7 +191,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
 
     if (loading) return <div className="diary-popup">Loading...</div>;
     if (error) return <div className="diary-popup">{error}</div>;
-    
+
 
     const handleEditClick = (comment_id) => {
         setEditingcomment_id(comment_id);
@@ -131,23 +206,11 @@ const ForestPopup = ({ diary_id, onClose }) => {
             };
 
             try {
-                const response = await fetch(`/comments/${diary_id}/comments/${comment_id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(updatedComment),
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to update comment');
-                }
-
-                setComments(comments.map(comment =>
-                    comment.comment_id === comment_id ? updatedComment : comment
-                ));
+                await axios.put(`/comments/${diary_id}/comments/${comment_id}`, updatedComment);
+                setComments(comments.map(comment => comment.comment_id === comment_id ? updatedComment : comment));
             } catch (err) {
-                setError(err.message);
+                setError('Failed to update comment');
+                console.error(err);
             }
         }
         setEditingcomment_id(null);
@@ -155,17 +218,11 @@ const ForestPopup = ({ diary_id, onClose }) => {
 
     const handleDeleteClick = async (comment_id) => {
         try {
-            const response = await fetch(`/comments/${comment_id}`, {
-                method: 'DELETE',
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to delete comment');
-            }
-
+            await axios.delete(`/comments/${comment_id}`);
             setComments(comments.filter(comment => comment.comment_id !== comment_id));
         } catch (err) {
-            setError(err.message);
+            setError('Failed to delete comment');
+            console.error(err);
         }
     };
 
@@ -216,22 +273,22 @@ const ForestPopup = ({ diary_id, onClose }) => {
                     </div>
 
                     <div className={`forest-popup__main-content ${!hasAnswers ? 'forest-popup__main-content--centered' : ''}`}>
-                            <div className="forest-popup__question-section">
-                                <h2 className="forest-popup__question-title">Today's Question</h2>
-                                <div className="forest-popup__question-content">
-                                    <p className="forest-popup__question-text">Q. {questionData?.question_text}</p>
-                                    {answerData.map(answer => (
-                                        <div key={answer.answer_id}>
-                                            <p className="forest-popup__answer-text">{answer.answer_text}</p>
-                                            {answer.answer_photo && (
-                                                <div className="forest-popup__check-today-photo-box">
-                                                    <img src={answer.answer_photo} alt="Today's Question" />
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
+                        <div className="forest-popup__question-section">
+                            <h2 className="forest-popup__question-title">Today's Question</h2>
+                            <div className="forest-popup__question-content">
+                                <p className="forest-popup__question-text">Q. {questionData?.question_text}</p>
+                                {answerData.map(answer => (
+                                    <div key={answer.answer_id}>
+                                        <p className="forest-popup__answer-text">{answer.answer_text}</p>
+                                        {answer.answer_photo && (
+                                            <div className="forest-popup__check-today-photo-box">
+                                                <img src={answer.answer_photo} alt="Today's Question" />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
+                        </div>
                         <div className="forest-popup__diary-section">
                             <div className='forest-popup__title'>
                                 <img src={miniTreeImage} alt="" className="forest-popup__mini-tree-image" />
