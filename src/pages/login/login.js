@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 import Menu from '../../components/menu';
@@ -13,10 +13,17 @@ const Login = () => {
     const [error, setError] = useState(''); // 오류 상태 추가
     const [modalIsOpen, setModalIsOpen] = useState(false); // 모달 상태 추가
     const navigate = useNavigate();
+    let isMounted = true;
+
+    useEffect(() => {
+        return () => {
+            isMounted = false; // 언마운트 시 isMounted를 false로 설정
+        };
+    }, []);
 
     const handleGoogleLogin = () => {
         window.location.href = 'https://api.usdiary.site/users/login/google';
-    }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -30,19 +37,16 @@ const Login = () => {
 
         try {
             // 서버에 POST 요청 보내기
-            const response = await fetch('https://api.usdiary.site/users/login', {
+            const response = await fetch('https://api.usdiary.site/users/login', { // 서버 URL 확인
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(loginData),
             });
-            console.log(response);
 
             if (response.ok) {
                 const result = await response.json();
-                console.log(result);
-
                 const userTendency = result.data.user?.user_tendency;
                 const token = result.data.token;
                 const lastLogin = result.data.user?.last_login; // last_login 값 가져오기
@@ -75,12 +79,12 @@ const Login = () => {
     const handleFindIdClick = (e) => {
         e.preventDefault();
         navigate('/findId');
-    }
+    };
 
     const handleSignupClick = (e) => {
         e.preventDefault();
         navigate('/signup');
-    }
+    };
 
     return (
         <div className='wrap'>
@@ -155,7 +159,7 @@ const Login = () => {
                                 <a href="/findId" className="login-page__link" onClick={handleFindIdClick}>아이디 찾기 / 비밀번호 찾기</a>
                             </div>
                             <button type="submit" className="login-page__button">Log in</button>
-                            
+
                             <div className="login-page__signup">
                                 <span className="login-page__signup-text">아직 회원이 아니신가요?</span>
                                 <a href="/signup" className="login-page__signup-link" onClick={handleSignupClick}>회원가입 하기</a>
@@ -182,9 +186,10 @@ const Login = () => {
                     className="login-page__modal"
                     overlayClassName="login-page__modal-overlay"
                 >
-                    <h2 className="login-page__modal-title">로그인 오류</h2>
-                    <p>{error}</p>
-                    <button onClick={() => setModalIsOpen(false)}>닫기</button>
+                    <h3 className="login-page__modal-title">로그인 실패</h3>
+                    <div className="login-page__divider"></div>
+                    <p className="login-page__modal-message">{error}</p>
+                    <button onClick={() => setModalIsOpen(false)} className="login-page__modal-button">닫기</button>
                 </Modal>
             </div>
         </div>
