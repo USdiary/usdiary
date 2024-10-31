@@ -26,45 +26,46 @@ const Login = () => {
             sign_id: sign_id,
             password: password,
         };
-        console.log(loginData)
+        console.log(loginData);
 
         try {
             // 서버에 POST 요청 보내기
-            const response = await fetch('https://api.usdiary.site/users/login', { // 서버 URL 확인
+            const response = await fetch('https://api.usdiary.site/users/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(loginData),
-
             });
-            console.log(response)
-
+            console.log(response);
 
             if (response.ok) {
                 const result = await response.json();
                 console.log(result);
 
-                // 결과에서 user_tendency 추출
-                // 전체 user 객체를 포함한 응답 데이터에서 필요한 값만 추출
                 const userTendency = result.data.user?.user_tendency;
-                const token = result.data.token;// optional chaining을 사용하여 안전하게 접근
+                const token = result.data.token;
+                const lastLogin = result.data.user?.last_login; // last_login 값 가져오기
                 localStorage.setItem('token', token);
                 console.log('User Tendency:', userTendency);
                 console.log('Token:', token);
-                // userTendency를 state로 전달하여 홈 화면으로 이동
-                navigate('/home', { state: { userTendency: userTendency } });
+                
+                // last_login이 null인 경우 특정 페이지로 리디렉션
+                if (lastLogin === null) {
+                    navigate('/tendency/question'); // 처음 로그인 시 질문 페이지로 이동
+                } else {
+                    navigate('/home', { state: { userTendency: userTendency } }); // 일반 로그인 시 홈으로 이동
+                }
+                
                 console.log('로그인 성공:', result);
                 setError(''); // 오류 상태 초기화
             } else {
                 const errorResult = await response.json();
-                // 로그인 실패 처리 (예: 오류 메시지 표시)
                 console.error('로그인 실패:', errorResult.message);
                 setError(errorResult.message); // 오류 상태 설정
                 setModalIsOpen(true); // 모달 열기
             }
         } catch (error) {
-
             console.error('로그인 중 오류 발생:', error);
             setError('로그인 중 오류가 발생했습니다.'); // 오류 상태 설정
             setModalIsOpen(true); // 모달 열기
@@ -73,12 +74,12 @@ const Login = () => {
 
     const handleFindIdClick = (e) => {
         e.preventDefault();
-        navigate('/findId')
+        navigate('/findId');
     }
 
     const handleSignupClick = (e) => {
         e.preventDefault();
-        navigate('/signup')
+        navigate('/signup');
     }
 
     return (
@@ -155,8 +156,6 @@ const Login = () => {
                             </div>
                             <button type="submit" className="login-page__button">Log in</button>
                             
-
-
                             <div className="login-page__signup">
                                 <span className="login-page__signup-text">아직 회원이 아니신가요?</span>
                                 <a href="/signup" className="login-page__signup-link" onClick={handleSignupClick}>회원가입 하기</a>
@@ -183,14 +182,12 @@ const Login = () => {
                     className="login-page__modal"
                     overlayClassName="login-page__modal-overlay"
                 >
-                    <h3 className="login-page__modal-title">로그인 실패</h3>
-                    <div className="login-page__divider"></div>
-                    <p className="login-page__modal-message">{error}</p>
-                    <button onClick={() => setModalIsOpen(false)} className="login-page__modal-button">닫기</button>
+                    <h2 className="login-page__modal-title">로그인 오류</h2>
+                    <p>{error}</p>
+                    <button onClick={() => setModalIsOpen(false)}>닫기</button>
                 </Modal>
             </div>
         </div>
-
     );
 };
 
