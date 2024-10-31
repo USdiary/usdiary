@@ -52,8 +52,16 @@ const ForestPopup = ({ diary_id, onClose }) => {
     
         const fetchQuestionData = async () => {
             try {
-                const questionResponse = await axios.get('/contents/questions/today');
-                setQuestionData(questionResponse.data.data); // API에서 200 응답시 question 데이터 설정
+                const questionResponse = await axios.get(
+                    `/contents/questions/today`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                        timeout: 10000,
+                    }
+                );
+                setQuestionData(questionResponse.data); // API에서 200 응답시 question 데이터 설정
             } catch (err) {
                 if (err.response && err.response.status === 500) {
                     setError('서버 오류로 인해 오늘의 질문을 불러오는 데 실패했습니다.');
@@ -63,37 +71,77 @@ const ForestPopup = ({ diary_id, onClose }) => {
                 console.error("Error fetching today's question:", err);
             }
         };        
+
+        const fetchAnswerData = async () => {
+            try {
+                const answerResponse = await axios.get(`/contents/questions/${questionData?.question_id}/answers`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                setAnswerData(answerResponse.data);
+            } catch (err) {
+                setError('답변 데이터를 불러오는 데 실패했습니다.');
+                console.error("Error fetching answers data:", err);
+            }
+        };
     
         const fetchComments = async () => {
             try {
-                const commentsResponse = await axios.get(`/comments/${diary_id}/comments`);
-                setComments(commentsResponse.data); // API에서 200 응답시 comments 데이터 설정
+                const commentsResponse = await axios.get(
+                    `/comments/${diary_id}/comments`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+        
+                // 댓글 데이터가 빈 배열인 경우, "댓글이 없습니다"라는 메시지 설정
+                if (!commentsResponse.data.data || commentsResponse.data.data.length === 0) {
+                    console.log('No comments found for this diary.');
+                    setError('댓글이 없습니다.');
+                    setComments([]); // 댓글 데이터를 빈 배열로 설정
+                } else {
+                    setComments(commentsResponse.data.data); // 성공 시 comments 데이터 설정
+                }
             } catch (err) {
-                if (err.response && err.response.status === 404) {
-                    setError('일기를 찾을 수 없거나 댓글이 없습니다.');
-                } else if (err.response && err.response.status === 500) {
+                if (err.code === 'ECONNABORTED') {
+                    setError('서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.');
+                } else if (err.response?.status === 504) {
+                    setError('서버 게이트웨이 시간 초과로 인해 데이터를 불러오지 못했습니다.');
+                } else if (err.response?.status === 404) {
+                    setError('댓글 또는 일기를 찾을 수 없습니다.');
+                } else if (err.response?.status === 500) {
                     setError('서버 오류로 인해 댓글을 불러오는 데 실패했습니다.');
                 } else {
                     setError('댓글을 불러오는 데 실패했습니다.');
                 }
-                console.error("Error fetching comments:", err);
+                console.error('Error fetching comments:', err);
             }
-        };
+        };        
+        
+        
 
         const fetchAllData = async () => {
             setLoading(true);
-            await Promise.all([
-                fetchDiaryData(),
-                fetchQuestionData(),
-                fetchComments()
-            ]);
-            setLoading(false);
+            try {
+                await Promise.all([
+                    fetchDiaryData(),
+                    fetchQuestionData(),
+                    fetchComments()
+                ]);
+                await fetchAnswerData();
+            } catch (error) {
+                console.error("Error in fetching all data:", error);
+            } finally {
+                setLoading(false);
+            }
         };
 
         fetchAllData();
 
         // 팝업이 뜨면 배경 스크롤 방지
-        document.body.style.overflow = 'hidden';
 
         // 팝업이 닫히면 배경 스크롤 복원
         return () => {

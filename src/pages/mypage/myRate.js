@@ -21,6 +21,7 @@ const base64UrlToBase64 = (base64Url) => {
 };
 
 const MyRate = () => {
+    const [selectedDiary, setSelectedDiary] = useState([]);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
     const [diaryCards, setDiaryCards] = useState([]);
@@ -55,9 +56,11 @@ const MyRate = () => {
     const fetchDiaries = async (user_id) => {
         try {
             const response = await axios.get(`/diaries?user_id=${user_id}`);
+
+            console.log("Fetched diaryCards for user:", user_id, response.data.data.diary);
             // 서버 응답이 배열인지 확인
-            if (Array.isArray(response.data)) {
-                setDiaryCards(response.data);
+            if (Array.isArray(response.data.data.diary)) {
+                setDiaryCards(response.data.data.diary);
             } else {
                 console.error('일기 데이터 형식이 잘못되었습니다:', response.data);
                 setDiaryCards([]); // 빈 배열로 초기화
@@ -67,7 +70,7 @@ const MyRate = () => {
             setDiaryCards([]); // 오류 발생 시 빈 배열로 초기화
         }
     };
-    
+
 
     if (!user) {
         return <div>Loading...</div>; // 사용자 데이터 로딩 중
@@ -127,12 +130,12 @@ const MyRate = () => {
         const localDay = new Date(day);
         localDay.setHours(0, 0, 0, 0); // 날짜만 남기기
 
-        const diary = diaryCards.find(d => {
-            const diaryDate = new Date(d.createdAt);
+        const diary = diaryCards.find(diary => {
+            const diaryDate = new Date(diary.createdAt);
             diaryDate.setHours(diaryDate.getHours() - 9);
             diaryDate.setHours(0, 0, 0, 0); // 날짜만 남기기
 
-            return d.user_id === user.user_id && localDay.toDateString() === diaryDate.toDateString();
+            return diary.user_id === user.user_id && localDay.toDateString() === diaryDate.toDateString();
         });
 
         switch (diary ? diary.board_id : null) {
@@ -150,25 +153,26 @@ const MyRate = () => {
     const handleDayClick = (day) => {
         if (day) {
             setSelectedDate(day);
-            updateDiaryCards(day);
+            updateSelectedDiary(day);
         }
     };
 
-    const updateDiaryCards = (date) => {
+    const updateSelectedDiary = (date) => {
         const diariesOnSelectedDate = diaryCards.filter(diary => {
             const diaryDate = new Date(diary.createdAt);
             diaryDate.setHours(diaryDate.getHours() - 9);
             return diaryDate.toDateString() === date.toDateString() && diary.user_id === user.user_id;
         });
-        setDiaryCards(diariesOnSelectedDate);
+        setSelectedDiary(diariesOnSelectedDate.slice(0, 1)); // 선택한 날짜의 다이어리만 설정
     };
+
 
     const handlePreviousDay = () => {
         const previousDate = new Date(selectedDate);
         previousDate.setDate(previousDate.getDate() - 1);
         setSelectedDate(previousDate);
         // 해당 날짜의 일기 필터링
-        updateDiaryCards(previousDate);
+        updateSelectedDiary(previousDate);
     };
 
     const handleNextDay = () => {
@@ -176,7 +180,7 @@ const MyRate = () => {
         nextDate.setDate(nextDate.getDate() + 1);
         setSelectedDate(nextDate);
         // 해당 날짜의 일기 필터링
-        updateDiaryCards(nextDate);
+        updateSelectedDiary(nextDate);
     };
 
     return (
@@ -242,7 +246,7 @@ const MyRate = () => {
                         )}
                         <div className='diary-cards'>
                             <button className='next-previous-button-left' onClick={handlePreviousDay}>&lt;</button>
-                            {diaryCards.length > 0 ? diaryCards.map(diary => (
+                            {selectedDiary.length > 0 ? selectedDiary.map(diary => (
                                 <div className='myrate__diary-card' key={diary.diary_id} onClick={() => handleDiaryClick(diary)}>
                                     {diary.post_photo && (
                                         <img
