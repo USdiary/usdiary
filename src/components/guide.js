@@ -1,13 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../assets/css/guide.css';
 import guide1 from '../../src/assets/images/guide1.png';
 import guide2 from '../../src/assets/images/guide2.png';
 import guide3 from '../../src/assets/images/guide3.png';
 
-const GuidePopup = () => {
+const GuidePopup = ({ lastLogin }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [isOpen, setIsOpen] = useState(true); // 팝업 열림 상태 관리
+    const [isOpen, setIsOpen] = useState(false); 
     const images = [guide1, guide2, guide3];
+
+    useEffect(() => {
+        if (!lastLogin) {
+            setIsOpen(true);
+        }
+    }, [lastLogin]);
 
     const handleNext = () => {
         setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -18,10 +24,12 @@ const GuidePopup = () => {
     };
 
     const handleClose = () => {
-        setIsOpen(false); 
+        setIsOpen(false);
+        // last_login 값을 업데이트 
+        localStorage.setItem('last_login', new Date().toISOString()); 
     };
 
-    if (!isOpen) return null; 
+    if (!isOpen) return null;
 
     return (
         <div className="guide-popup">
