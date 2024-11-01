@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import '../assets/css/diaryCard.css';
 import axios from 'axios';
@@ -82,7 +82,7 @@ const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nic
                 </span>
             </div>
             <img
-                src={post_photo ? post_photo : defaultImg}
+                src={post_photo && post_photo !== '' ? post_photo : defaultImg}
                 alt={diary_title}
                 className="diary-image"
             />
