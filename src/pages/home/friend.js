@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import DiaryCard from '../../components/diaryCard';
 import '../../assets/css/friend.css';
+import GuidePopup from '../../components/guide';
 import Menu from '../../components/menu';
 import axios from "axios";
 
@@ -65,6 +66,8 @@ const Friend = () => {
     );
 
     return (
+        <div className="page">
+            <GuidePopup />
         <div className="wrap">
             <Menu />
             <div className="friend-page__container">
@@ -129,6 +132,7 @@ const Friend = () => {
                 <div className="friend-page__tree-background"></div>
             </div>
         </div>
+    </div>
     );
 }
 
