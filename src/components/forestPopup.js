@@ -5,6 +5,8 @@ import sirenIcon from '../assets/images/siren_forest.png';
 import axios from 'axios';
 import ReportPopup from './reportPopup';
 import { jwtDecode } from 'jwt-decode';
+import { Viewer } from '@toast-ui/react-editor';
+import defaultImage from '../assets/images/default.png';
 
 const ForestPopup = ({ diary_id, onClose }) => {
     const [diary, setDiary] = useState(null);
@@ -17,136 +19,155 @@ const ForestPopup = ({ diary_id, onClose }) => {
     const [editingcomment_id, setEditingcomment_id] = useState(null);
     const commentRefs = useRef({});
     const [liked, setLiked] = useState(false);
-    const [currentUserProfile, setCurrentUserProfile] = useState({
-        profile_img: '',
-        user_nick: ''
-    });
+    const [userProfile, setUserProfile] = useState({ user_nick: '', profile_img: '' });
 
     useEffect(() => {
-        const token = localStorage.getItem('token'); // 토큰 가져오기
+        const token = localStorage.getItem('token');
         if (token) {
             const decoded = jwtDecode(token);
-            setCurrentUserProfile({
-                profile_img: decoded.profile_img,
-                user_nick: decoded.user_nick
-            });
-        }
+            const userId = decoded.user_id; // 토큰에서 user_id 추출
 
+            const fetchUserProfile = async () => {
+                try {
+                    const response = await axios.get(`/mypages/profiles/${userId}`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+
+                    // 응답 데이터에서 user_nick과 profile_img를 설정
+                    const profileData = response.data.data;
+                    setUserProfile({
+                        user_nick: profileData.user_nick,
+                        profile_img: profileData.profile_img,
+                    });
+                } catch (error) {
+                    console.error('Error fetching user profile:', error);
+                }
+            };
+
+            fetchUserProfile();
+        }
+    }, []);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
         const fetchDiaryData = async () => {
             try {
-                const diaryResponse = await axios.get(`/diaries/${diary_id}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                const response = await axios.get(`/diaries/${diary_id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
                 });
-                setDiary(diaryResponse.data); // API에서 200 응답시 diary 데이터 설정
-            } catch (err) {
-                if (err.response && err.response.status === 404) {
-                    setError('일기를 찾을 수 없습니다.');
-                } else {
-                    setError('일기 데이터를 불러오는 데 실패했습니다.');
-                }
-                console.error("Error fetching diary data:", err.response ? err.response.data : err.message);
-            }
-        };
-    
-        const fetchQuestionData = async () => {
-            try {
-                const questionResponse = await axios.get(
-                    `/contents/questions/today`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                        timeout: 10000,
-                    }
-                );
-                setQuestionData(questionResponse.data); // API에서 200 응답시 question 데이터 설정
-            } catch (err) {
-                if (err.response && err.response.status === 500) {
-                    setError('서버 오류로 인해 오늘의 질문을 불러오는 데 실패했습니다.');
-                } else {
-                    setError('오늘의 질문을 불러오는 데 실패했습니다.');
-                }
-                console.error("Error fetching today's question:", err);
-            }
-        };        
-
-        const fetchAnswerData = async () => {
-            try {
-                const answerResponse = await axios.get(`/contents/questions/${questionData?.question_id}/answers`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                setAnswerData(answerResponse.data);
-            } catch (err) {
-                setError('답변 데이터를 불러오는 데 실패했습니다.');
-                console.error("Error fetching answers data:", err);
-            }
-        };
-    
-        const fetchComments = async () => {
-            try {
-                const commentsResponse = await axios.get(
-                    `/comments/${diary_id}/comments`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-        
-                // 댓글 데이터가 빈 배열인 경우, "댓글이 없습니다"라는 메시지 설정
-                if (!commentsResponse.data.data || commentsResponse.data.data.length === 0) {
-                    console.log('No comments found for this diary.');
-                    setError('댓글이 없습니다.');
-                    setComments([]); // 댓글 데이터를 빈 배열로 설정
-                } else {
-                    setComments(commentsResponse.data.data); // 성공 시 comments 데이터 설정
-                }
-            } catch (err) {
-                if (err.code === 'ECONNABORTED') {
-                    setError('서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.');
-                } else if (err.response?.status === 504) {
-                    setError('서버 게이트웨이 시간 초과로 인해 데이터를 불러오지 못했습니다.');
-                } else if (err.response?.status === 404) {
-                    setError('댓글 또는 일기를 찾을 수 없습니다.');
-                } else if (err.response?.status === 500) {
-                    setError('서버 오류로 인해 댓글을 불러오는 데 실패했습니다.');
-                } else {
-                    setError('댓글을 불러오는 데 실패했습니다.');
-                }
-                console.error('Error fetching comments:', err);
-            }
-        };        
-        
-        
-
-        const fetchAllData = async () => {
-            setLoading(true);
-            try {
-                await Promise.all([
-                    fetchDiaryData(),
-                    fetchQuestionData(),
-                    fetchComments()
-                ]);
-                await fetchAnswerData();
+                setDiary(response.data.data.diary);
+                console.log('Diary Data:', response.data.data);
             } catch (error) {
-                console.error("Error in fetching all data:", error);
+                const message = error.response?.status === 404
+                    ? '일기를 찾을 수 없습니다.'
+                    : '일기 데이터를 불러오는 데 실패했습니다.';
+                setError(message);
+                console.error('Error fetching diary data:', error.response?.data || error.message);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchAllData();
+        fetchDiaryData();
+    }, [diary_id]);
 
-        // 팝업이 뜨면 배경 스크롤 방지
-
-        // 팝업이 닫히면 배경 스크롤 복원
-        return () => {
-            document.body.style.overflow = '';
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const fetchQuestionData = async () => {
+            try {
+                const response = await axios.get('/contents/questions/today', {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                    timeout: 10000,
+                });
+                const data = response.data?.data;
+                setQuestionData(data || null);
+                console.log('Question Data:', data);
+            } catch (error) {
+                const message = error.code === 'ECONNABORTED'
+                    ? '서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.'
+                    : '오늘의 질문을 불러오는 데 실패했습니다.';
+                setError(message);
+                console.error("Error fetching today's question:", error);
+            } finally {
+                setLoading(false);
+            }
         };
+
+        fetchQuestionData();
+    }, [diary_id]);
+
+    useEffect(() => {
+        if (!questionData?.question_id) {
+            setAnswerData(null);
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        const fetchAnswerData = async (answer_id) => {
+            try {
+                const response = await axios.get(`/contents/questions/${questionData.question_id}/answers/${answer_id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const data = response.data?.data;
+
+                if (data) {
+                    setAnswerData({
+                        answer_text: data.answer_text,
+                        answer_photo: data.answer_photo,
+                        question: data.question,
+                    });
+                    console.log('Answer Data:', data);
+                } else {
+                    setAnswerData(null); // 데이터가 없을 때 빈 상태로 설정
+                    console.log('Answer Data:', data);
+                }
+            } catch (error) {
+                if (error.response?.status === 404) {
+                    setAnswerData(null); // 답변을 찾을 수 없는 경우 빈 상태로 설정
+                    console.error('Answer not found:', error);
+                } else {
+                    console.error('Error fetching answer data:', error); // 서버 오류는 콘솔에만 표시
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (questionData.answer_id) {
+            fetchAnswerData(questionData.answer_id);
+        } else {
+            setAnswerData([]);
+        }
+    }, [questionData]);
+
+
+    // Comments data fetch
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+
+        const fetchComments = async () => {
+            try {
+                // 모든 댓글을 가져오는 엔드포인트
+                const response = await axios.get(`/diaries/${diary_id}/comments`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                const commentsData = response.data?.data || [];
+                setComments(commentsData);
+                console.log('Comments Data:', commentsData);
+
+            } catch (error) {
+                const message = error.code === 'ECONNABORTED'
+                    ? '서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.'
+                    : '댓글을 불러오는 데 실패했습니다.';
+                setError(message);
+                console.error('Error fetching comments:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchComments();
     }, [diary_id]);
 
     const handleBackgroundClick = (e) => {
@@ -162,19 +183,53 @@ const ForestPopup = ({ diary_id, onClose }) => {
     const handleCommentSubmit = async () => {
         if (newComment.trim()) {
             const newCommentData = {
-                user_nick: currentUserProfile.user_nick,
-                comment_text: newComment,
-                diary_id: diary_id,
+                content: newComment, // 서버가 기대하는 필드명에 맞춤
             };
 
-            // 서버에 댓글 추가
             try {
-                const response = await axios.post(`/comments/${diary_id}/comments`, newCommentData);
-                setComments([...comments, response.data]);
-                setNewComment("");
+                const token = localStorage.getItem('token'); // JWT 토큰 가져오기
+
+                // 서버에 댓글 요청
+                const response = await axios.post(`/diaries/${diary_id}/comments`, newCommentData, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                // 상태 코드가 201일 때만 댓글 목록에 추가
+                if (response.status === 201) {
+                    const newCommentWithUser = {
+                        ...response.data.data.comment,
+                        User: {
+                            user_nick: userProfile?.user_nick,
+                            Profile: {
+                                profile_img: userProfile?.profile_img,
+                            },
+                        },
+                    };
+    
+                    setComments(prevComments => [...prevComments, newCommentWithUser]);
+                    setNewComment("");
+                    console.log(response.data.message); // 댓글 생성 성공 메시지 로그
+                } else {
+                    setError('Failed to submit comment');
+                    console.error('Unexpected response status:', response.status);
+                }
             } catch (err) {
-                setError('Failed to submit comment');
-                console.error(err);
+                if (err.response) {
+                    if (err.response.status === 419) {
+                        setError('Token has expired');
+                    } else if (err.response.status === 404) {
+                        setError(err.response.data.message);
+                    } else {
+                        setError('Failed to submit comment');
+                    }
+                    console.error('Server response error:', err.response.data);
+                } else {
+                    setError('Failed to submit comment');
+                    console.error('Error submitting comment:', err);
+                }
             }
         }
     };
@@ -218,13 +273,37 @@ const ForestPopup = ({ diary_id, onClose }) => {
 
     const handleDeleteClick = async (comment_id) => {
         try {
-            await axios.delete(`/comments/${comment_id}`);
-            setComments(comments.filter(comment => comment.comment_id !== comment_id));
+            const token = localStorage.getItem('token'); // JWT 토큰 가져오기
+            const response = await axios.delete(`/diaries/comments/${comment_id}`, {
+                headers: { Authorization: `Bearer ${token}` }, // 토큰 헤더에 추가
+            });
+
+            // 상태 코드가 200일 때만 댓글 목록에서 삭제
+            if (response.status === 200) {
+                setComments(prevComments => prevComments.filter(comment => comment.comment_id !== comment_id));
+                console.log('Comment deleted successfully:', comment_id);
+                return;
+            }
+
+            // 상태 코드가 404일 경우
+            if (response.status === 404) {
+                setError('Comment not found');
+                console.error('Comment not found:', comment_id);
+                return;
+            }
+
+            // 예상치 못한 상태 코드
+            setError('Failed to delete comment');
+            console.error('Unexpected response status:', response.status);
+
         } catch (err) {
             setError('Failed to delete comment');
-            console.error(err);
+            console.error('Error deleting comment:', err);
         }
     };
+
+
+
 
     const hasComments = comments.length > 0;
     const hasAnswers = answerData && answerData.length > 0;
@@ -259,8 +338,8 @@ const ForestPopup = ({ diary_id, onClose }) => {
                 <div className="forest-popup__content">
                     <div className='forest-popup__header'>
                         <div className='forest-popup__header-left'>
-                            <img src={diary.user.profile.profile_img} alt={`${diary.user.user_nick}'s profile`} className="forest-popup__author-profile-image" />
-                            <p className="forest-popup__author-nickname">{diary.user.user_nick}님</p>
+                            <img src={diary?.User?.Profile?.profile_img || defaultImage} alt={`${diary?.User?.user_nick || 'User'}'s profile`} className="forest-popup__author-profile-image" />
+                            <p className="forest-popup__author-nickname">{diary?.User?.user_nick || 'User'}님</p>
                         </div>
                         <div className="forest-popup__header-right">
                             <button className="forest-popup__report-button" onClick={handleReportButtonClick}>
@@ -277,7 +356,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                             <h2 className="forest-popup__question-title">Today's Question</h2>
                             <div className="forest-popup__question-content">
                                 <p className="forest-popup__question-text">Q. {questionData?.question_text}</p>
-                                {answerData.map(answer => (
+                                {Array.isArray(answerData) && answerData.map((answer) => (
                                     <div key={answer.answer_id}>
                                         <p className="forest-popup__answer-text">{answer.answer_text}</p>
                                         {answer.answer_photo && (
@@ -287,6 +366,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                                         )}
                                     </div>
                                 ))}
+
                             </div>
                         </div>
                         <div className="forest-popup__diary-section">
@@ -295,17 +375,17 @@ const ForestPopup = ({ diary_id, onClose }) => {
                                 <h1 className='forest-popup__forest'>Today's Forest</h1>
                             </div>
                             <div className='forest-popup__title-container'>
-                                <p className='forest-popup__diary-title'>{diary.diary_title}</p>
+                                <p className='forest-popup__diary-title'>{diary?.diary_title}</p>
                                 <div className="forest-popup__title-line"></div>
                             </div>
                             <div className="forest-popup__diary-content">
-                                <p>{diary.diary_content}</p>
+                                <Viewer initialValue={diary?.diary_content || ""} />
                             </div>
                         </div>
                     </div>
 
                     <div className="forest-popup__comment-input-section">
-                        <img src={currentUserProfile.profile_img} alt="User Profile" className="forest-popup__user-profile-image" />
+                        <img src={userProfile.profile_img} alt="User Profile" className="forest-popup__user-profile-image" />
                         <input
                             type="text"
                             value={newComment}
@@ -318,11 +398,17 @@ const ForestPopup = ({ diary_id, onClose }) => {
 
                     <div className={`forest-popup__comments-section ${!hasComments ? 'forest-popup__comments-section--no-comments' : ''}`}>
                         {hasComments ? (
-                            comments.map((comment) => (
+                            Array.isArray(comments) && comments.map((comment) => (
                                 <div key={comment.comment_id} className="forest-popup__comment">
-                                    <img src={comment.user.profile.profile_img} alt={`${comment.user.user_nick}'s profile`} className="forest-popup__comment-profile-image" />
+                                    <img
+                                        src={comment.User?.Profile?.profile_img || ''}
+                                        alt={`${comment.User?.user_nick || 'User'}'s profile`}
+                                        className="forest-popup__comment-profile-image"
+                                    />
                                     <div className="forest-popup__comment-details">
-                                        <p className="forest-popup__comment-nickname">{comment.user.user_nick}님</p>
+                                        <p className="forest-popup__comment-nickname">
+                                            {comment.User?.user_nick ? `${comment?.User?.user_nick}님` : 'Anonymous'}
+                                        </p>
                                         <p
                                             className={`forest-popup__comment-content ${editingcomment_id === comment.comment_id ? 'forest-popup__comment-content--editable' : ''}`}
                                             contentEditable={editingcomment_id === comment.comment_id}
@@ -333,7 +419,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                                             {comment.comment_text}
                                         </p>
                                     </div>
-                                    {comment.user.user_nick === currentUserProfile.user_nick && (
+                                    {comment.User?.user_nick === userProfile.user_nick && (
                                         <div className="forest-popup__comment-actions">
                                             {editingcomment_id === comment.comment_id ? (
                                                 <button
@@ -363,6 +449,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                         ) : (
                             <p className="forest-popup__no-comments-message">첫 번째 댓글을 남겨보세요!</p>
                         )}
+
                     </div>
                 </div>
             </div>
