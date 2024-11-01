@@ -21,10 +21,9 @@ const Login = () => {
         };
     }, []);
 
-
     const handleGoogleLogin = () => {
         window.location.href = 'https://api.usdiary.site/users/login/google';
-    }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -34,7 +33,7 @@ const Login = () => {
             sign_id: sign_id,
             password: password,
         };
-        console.log(loginData)
+        console.log(loginData);
 
         try {
             // 서버에 POST 요청 보내기
@@ -44,45 +43,48 @@ const Login = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(loginData),
-
             });
-
 
             if (response.ok) {
                 const result = await response.json();
                 const userTendency = result.data.user?.user_tendency;
                 const token = result.data.token;
+                const lastLogin = result.data.user?.last_login; // last_login 값 가져오기
                 localStorage.setItem('token', token);
-
-                if (isMounted) {
-                    navigate('/home', { state: { userTendency } });
-                    setError('');
+                console.log('User Tendency:', userTendency);
+                console.log('Token:', token);
+                
+                // last_login이 null인 경우 특정 페이지로 리디렉션
+                if (lastLogin === null) {
+                    navigate('/tendency/question'); // 처음 로그인 시 질문 페이지로 이동
+                } else {
+                    navigate('/home', { state: { userTendency: userTendency } }); // 일반 로그인 시 홈으로 이동
                 }
+                
+                console.log('로그인 성공:', result);
+                setError(''); // 오류 상태 초기화
             } else {
                 const errorResult = await response.json();
-                if (isMounted) {
-                    setError(errorResult.message);
-                    setModalIsOpen(true);
-                }
+                console.error('로그인 실패:', errorResult.message);
+                setError(errorResult.message); // 오류 상태 설정
+                setModalIsOpen(true); // 모달 열기
             }
         } catch (error) {
-            if (isMounted) {
-                setError('로그인 중 오류가 발생했습니다.');
-                setModalIsOpen(true);
-            }
-
+            console.error('로그인 중 오류 발생:', error);
+            setError('로그인 중 오류가 발생했습니다.'); // 오류 상태 설정
+            setModalIsOpen(true); // 모달 열기
         }
     };
 
     const handleFindIdClick = (e) => {
         e.preventDefault();
-        navigate('/findId')
-    }
+        navigate('/findId');
+    };
 
     const handleSignupClick = (e) => {
         e.preventDefault();
-        navigate('/signup')
-    }
+        navigate('/signup');
+    };
 
     return (
         <div className='wrap'>
@@ -158,8 +160,6 @@ const Login = () => {
                             </div>
                             <button type="submit" className="login-page__button">Log in</button>
 
-
-
                             <div className="login-page__signup">
                                 <span className="login-page__signup-text">아직 회원이 아니신가요?</span>
                                 <a href="/signup" className="login-page__signup-link" onClick={handleSignupClick}>회원가입 하기</a>
@@ -193,7 +193,6 @@ const Login = () => {
                 </Modal>
             </div>
         </div>
-
     );
 };
 
