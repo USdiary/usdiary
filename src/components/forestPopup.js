@@ -19,7 +19,10 @@ const ForestPopup = ({ diary_id, onClose }) => {
     const [editingcomment_id, setEditingcomment_id] = useState(null);
     const commentRefs = useRef({});
     const [liked, setLiked] = useState(false);
+    const [likedCount, setLikedCount] = useState(0);
     const [userProfile, setUserProfile] = useState({ user_nick: '', profile_img: '' });
+    const [diaryLoading, setDiaryLoading] = useState(true);
+
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -51,6 +54,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         const fetchDiaryData = async () => {
+            setDiaryLoading(true);
             try {
                 const response = await axios.get(`/diaries/${diary_id}`, {
                     headers: { Authorization: `Bearer ${token}` },
@@ -64,7 +68,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                 setError(message);
                 console.error('Error fetching diary data:', error.response?.data || error.message);
             } finally {
-                setLoading(false);
+                setDiaryLoading(false);
             }
         };
 
@@ -170,6 +174,20 @@ const ForestPopup = ({ diary_id, onClose }) => {
         fetchComments();
     }, [diary_id]);
 
+    useEffect(() => {
+        const fetchLikeData = async () => {
+            try {
+                const response = await axios.get(`/diaries/${diary_id}/like`);
+                setLiked(response.data.data.liked); // 좋아요 상태 초기화
+                setLikedCount(response.data.data.like_count); // 서버에서 받아온 좋아요 개수로 초기화
+            } catch (error) {
+                console.error('Failed to fetch like data:', error);
+            }
+        };
+
+        fetchLikeData();
+    }, [diary_id]);
+
     const handleBackgroundClick = (e) => {
         if (e.target === e.currentTarget) {
             onClose();
@@ -246,7 +264,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
 
     if (loading) return <div className="diary-popup">Loading...</div>;
     if (error) return <div className="diary-popup">{error}</div>;
-
+    if (diaryLoading) return <div className="diary-popup">Loading...</div>;
 
     const handleEditClick = (comment_id) => {
         setEditingcomment_id(comment_id);
@@ -303,22 +321,9 @@ const ForestPopup = ({ diary_id, onClose }) => {
     };
 
 
-
-
     const hasComments = comments.length > 0;
     const hasAnswers = answerData && answerData.length > 0;
-
-    const toggleLike = async (e) => {
-        e.stopPropagation();
-        try {
-            const response = await axios.post(`/diaries/${diary_id}/like`, { liked: !liked });
-            if (response.status === 200) {
-                setLiked(!liked);
-            }
-        } catch (error) {
-            console.error('Failed to update like status', error);
-        }
-    };
+    
 
     const EmptyHeart = () => (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -345,9 +350,11 @@ const ForestPopup = ({ diary_id, onClose }) => {
                             <button className="forest-popup__report-button" onClick={handleReportButtonClick}>
                                 <img src={sirenIcon} alt="Report icon" />
                             </button>
-                            <span className="forest-popup__like-button" onClick={toggleLike}>
+                            <div className="forest-popup__like-button">
                                 {liked ? <FilledHeart /> : <EmptyHeart />}
-                            </span>
+                                
+                            </div>
+                            <div className="forest-popup__like-count">{likedCount}</div>
                         </div>
                     </div>
 
@@ -385,7 +392,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                     </div>
 
                     <div className="forest-popup__comment-input-section">
-                        <img src={userProfile.profile_img} alt="User Profile" className="forest-popup__user-profile-image" />
+                        <img src={userProfile.profile_img || defaultImage} alt="User Profile" className="forest-popup__user-profile-image" />
                         <input
                             type="text"
                             value={newComment}
