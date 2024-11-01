@@ -121,7 +121,7 @@ const SignUp = () => {
                      // 회원가입 성공 시 토큰을 localStorage에 저장
                     const token = result.data.token;
                     localStorage.setItem('authToken', token); // 로컬스토리지에 토큰 저장
-                    navigate('/question');
+                    navigate('/login');
                 } else {
                     console.error('회원가입 실패:', result.message);
                     setError(result.message);
