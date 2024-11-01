@@ -1,24 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 import '../../assets/css/follow.css';
 import '../../assets/css/myRate.css';
 import 'react-datepicker/dist/react-datepicker.css';
-import defaultImage from '../../assets/images/default.png'
+import defaultImage from '../../assets/images/default.png';
 
 import Menu from '../../components/menu';
 import ProfileMenu from '../../components/profileMenu';
-
-const base64UrlToBase64 = (base64Url) => {
-    // Base64Url에서 '-'를 '+'로, '_'를 '/'로 변환
-    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    // Base64 문자열의 길이를 4의 배수로 맞추기 위해 '=' 추가
-    while (base64.length % 4) {
-        base64 += '=';
-    }
-    return base64;
-};
 
 const MyRate = () => {
     const [selectedDiary, setSelectedDiary] = useState([]);
@@ -36,44 +27,50 @@ const MyRate = () => {
             return;
         }
 
-        // JWT를 '.' 기준으로 분리하여 payload 부분 가져오기
-        const tokenParts = token.split('.');
-        if (tokenParts.length !== 3) {
-            console.error('JWT 형식이 잘못되었습니다.');
-            return;
+        try {
+            const userDataFromToken = jwtDecode(token);
+            setUser(userDataFromToken);
+            console.log('Decoded user data:', userDataFromToken);
+        } catch (error) {
+            console.error('JWT 디코딩 오류:', error);
         }
-
-        const userDataFromToken = JSON.parse(atob(base64UrlToBase64(tokenParts[1])));
-        setUser(userDataFromToken);
     }, []);
 
     useEffect(() => {
         if (user) {
-            fetchDiaries(user.user_id);
+            fetchDiariesByMonth(user.user_id, currentDate.getFullYear(), currentDate.getMonth() + 1);
         }
-    }, [user]);
+    }, [user, currentDate]);
 
-    const fetchDiaries = async (user_id) => {
+    const fetchDiariesByMonth = async (user_id, year, month) => {
+        setDiaryCards([]); // 이전 데이터를 초기화하여 새로운 달의 데이터만 보여주도록 설정
+
         try {
-            const response = await axios.get(`/diaries?user_id=${user_id}`);
-
+            const response = await axios.get(`/diaries?user_id=${user_id}&year=${year}&month=${month}&limit=31`);
             console.log("Fetched diaryCards for user:", user_id, response.data.data.diary);
-            // 서버 응답이 배열인지 확인
+
             if (Array.isArray(response.data.data.diary)) {
-                setDiaryCards(response.data.data.diary);
+                // 가져온 데이터 중에서 정확한 연도와 월을 만족하는 데이터만 필터링
+                const filteredDiaries = response.data.data.diary.filter(diary => {
+                    const diaryDate = new Date(diary.createdAt);
+                    return (
+                        diaryDate.getFullYear() === year &&
+                        diaryDate.getMonth() + 1 === month
+                    );
+                });
+                setDiaryCards(filteredDiaries);
             } else {
                 console.error('일기 데이터 형식이 잘못되었습니다:', response.data);
-                setDiaryCards([]); // 빈 배열로 초기화
+                setDiaryCards([]);
             }
         } catch (error) {
             console.error('일기를 가져오는 중 오류 발생:', error);
-            setDiaryCards([]); // 오류 발생 시 빈 배열로 초기화
+            setDiaryCards([]);
         }
     };
 
-
     if (!user) {
-        return <div>Loading...</div>; // 사용자 데이터 로딩 중
+        return <div>Loading...</div>;
     }
 
     const handleDiaryClick = (diary) => {
@@ -106,19 +103,15 @@ const MyRate = () => {
     const getDaysInMonth = (year, month) => {
         const date = new Date(year, month, 1);
         const days = [];
-
-        // 첫 번째 요일을 가져옴
         const firstDayOfWeek = date.getDay();
 
-        // 그 달의 모든 날짜를 추가
         while (date.getMonth() === month) {
             days.push(new Date(date));
             date.setDate(date.getDate() + 1);
         }
 
-        // 마지막으로 빈 공간을 첫째 날 앞에 추가
         for (let i = 0; i < firstDayOfWeek; i++) {
-            days.unshift(null); // 빈 공간을 null로 표시
+            days.unshift(null);
         }
 
         return days;
@@ -127,26 +120,28 @@ const MyRate = () => {
     const daysInMonth = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth());
 
     const getBackgroundColor = (day) => {
+        if (!day) return '#FFFFFF';
+
         const localDay = new Date(day);
-        localDay.setHours(0, 0, 0, 0); // 날짜만 남기기
+        localDay.setHours(0, 0, 0, 0);
 
         const diary = diaryCards.find(diary => {
             const diaryDate = new Date(diary.createdAt);
             diaryDate.setHours(diaryDate.getHours() - 9);
-            diaryDate.setHours(0, 0, 0, 0); // 날짜만 남기기
+            diaryDate.setHours(0, 0, 0, 0);
 
             return diary.user_id === user.user_id && localDay.toDateString() === diaryDate.toDateString();
         });
 
         switch (diary ? diary.board_id : null) {
             case 1:
-                return '#B8D8AD'; // 숲
+                return '#B8D8AD';
             case 2:
-                return '#D9D9D9'; // 도시
+                return '#D9D9D9';
             case 3:
-                return '#A5DFDF'; // 바다
+                return '#A5DFDF';
             default:
-                return '#FFFFFF'; // 일기 없음
+                return '#FFFFFF';
         }
     };
 
@@ -163,15 +158,13 @@ const MyRate = () => {
             diaryDate.setHours(diaryDate.getHours() - 9);
             return diaryDate.toDateString() === date.toDateString() && diary.user_id === user.user_id;
         });
-        setSelectedDiary(diariesOnSelectedDate.slice(0, 1)); // 선택한 날짜의 다이어리만 설정
+        setSelectedDiary(diariesOnSelectedDate.slice(0, 1));
     };
-
 
     const handlePreviousDay = () => {
         const previousDate = new Date(selectedDate);
         previousDate.setDate(previousDate.getDate() - 1);
         setSelectedDate(previousDate);
-        // 해당 날짜의 일기 필터링
         updateSelectedDiary(previousDate);
     };
 
@@ -179,7 +172,6 @@ const MyRate = () => {
         const nextDate = new Date(selectedDate);
         nextDate.setDate(nextDate.getDate() + 1);
         setSelectedDate(nextDate);
-        // 해당 날짜의 일기 필터링
         updateSelectedDiary(nextDate);
     };
 
@@ -248,17 +240,16 @@ const MyRate = () => {
                             <button className='next-previous-button-left' onClick={handlePreviousDay}>&lt;</button>
                             {selectedDiary.length > 0 ? selectedDiary.map(diary => (
                                 <div className='myrate__diary-card' key={diary.diary_id} onClick={() => handleDiaryClick(diary)}>
-                                    {diary.post_photo && (
-                                        <img
-                                            src={diary.post_photo || defaultImage}
-                                            alt={`${diary.diary_title} 이미지`}
-                                            className='myrate__diary-card__image'
-                                        />
-                                    )}
+                                    <img
+                                        src={diary.post_photo && diary.post_photo !== '' ? diary.post_photo : defaultImage}
+                                        alt={`${diary.diary_title} 이미지`}
+                                        className='myrate__diary-card__image'
+                                    />
                                     <h4>{diary.diary_title}</h4>
                                     <p className='myrate__diary-card__content'>{diary.diary_content.replace(/<[^>]+>/g, '').substring(0, 100)}</p>
                                 </div>
                             )) : null}
+
                             <button className='next-previous-button-right' onClick={handleNextDay}>&gt;</button>
                         </div>
                     </div>
