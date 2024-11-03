@@ -28,11 +28,11 @@ const ForestPopup = ({ diary_id, onClose }) => {
         const token = localStorage.getItem('token');
         if (token) {
             const decoded = jwtDecode(token);
-            const userId = decoded.user_id; // 토큰에서 user_id 추출
+            const user_id = decoded.user_id; // 토큰에서 user_id 추출
 
             const fetchUserProfile = async () => {
                 try {
-                    const response = await axios.get(`/mypages/profiles/${userId}`, {
+                    const response = await axios.get(`/mypages/profiles/${user_id}`, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
 
@@ -56,7 +56,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
         const fetchDiaryData = async () => {
             setDiaryLoading(true);
             try {
-                const response = await axios.get(`/diaries/${diary_id}`, {
+                const response = await axios.get(`https://api.usdiary.site/diaries/${diary_id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setDiary(response.data.data.diary);
@@ -79,7 +79,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
         const token = localStorage.getItem('token');
         const fetchQuestionData = async () => {
             try {
-                const response = await axios.get('/contents/questions/today', {
+                const response = await axios.get('https://api.usdiary.site/contents/questions/today', {
                     headers: token ? { Authorization: `Bearer ${token}` } : {},
                     timeout: 10000,
                 });
@@ -109,7 +109,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
         const token = localStorage.getItem('token');
         const fetchAnswerData = async (answer_id) => {
             try {
-                const response = await axios.get(`/contents/questions/${questionData.question_id}/answers/${answer_id}`, {
+                const response = await axios.get(`https://api.usdiary.site/contents/questions/${questionData.question_id}/answers/${answer_id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data = response.data?.data;
@@ -140,7 +140,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
         if (questionData.answer_id) {
             fetchAnswerData(questionData.answer_id);
         } else {
-            setAnswerData([]);
+            setAnswerData([]); 
         }
     }, [questionData]);
 
@@ -152,7 +152,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
         const fetchComments = async () => {
             try {
                 // 모든 댓글을 가져오는 엔드포인트
-                const response = await axios.get(`/diaries/${diary_id}/comments`, {
+                const response = await axios.get(`https://api.usdiary.site/diaries/${diary_id}/comments`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -177,7 +177,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
     useEffect(() => {
         const fetchLikeData = async () => {
             try {
-                const response = await axios.get(`/diaries/${diary_id}/like`);
+                const response = await axios.get(`https://api.usdiary.site/diaries/${diary_id}/like`);
                 setLiked(response.data.data.liked); // 좋아요 상태 초기화
                 setLikedCount(response.data.data.like_count); // 서버에서 받아온 좋아요 개수로 초기화
             } catch (error) {
@@ -208,7 +208,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                 const token = localStorage.getItem('token'); // JWT 토큰 가져오기
 
                 // 서버에 댓글 요청
-                const response = await axios.post(`/diaries/${diary_id}/comments`, newCommentData, {
+                const response = await axios.post(`https://api.usdiary.site/diaries/${diary_id}/comments`, newCommentData, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         'Content-Type': 'application/json',
