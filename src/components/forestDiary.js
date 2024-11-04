@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Viewer, Editor } from '@toast-ui/react-editor';
 import '@toast-ui/editor/dist/toastui-editor.css';
 import axios from 'axios'; // axios 임포트
+import imageCompression from 'browser-image-compression';
 
 import tree from '../assets/images/tree.png';
 import DateSelector from './dateSelector'; // DateSelector 컴포넌트 불러오기
@@ -27,7 +28,7 @@ const ForestComponent = () => {
   // Axios로 다이어리 데이터 fetch
   const fetchDiaryData = useCallback(async () => {
     try {
-      const response = await axios.get(`/diaries`, {
+      const response = await axios.get(`https://api.usdiary.site/diaries`, {
         params: { date: selectedDate.toISOString().split('T')[0] } // 날짜를 query parameter로 전달
       });
       setDiaryData(response.data); // 불러온 데이터 설정
@@ -52,7 +53,7 @@ const ForestComponent = () => {
     } else {
       fetchDiaryData(); // 다이어리가 없을 때만 데이터 fetch
     }
-  }, [diary, fetchDiaryData]);
+  }, [diary]);
 
   // 선택된 날짜로 currentDate 업데이트
   const handleDateClick = (date) => {
@@ -91,6 +92,68 @@ const ForestComponent = () => {
     }
   };
 
+  const addImageBlobHook = async (blob, callback) => {
+    try {
+      if (!(blob instanceof Blob)) {
+        console.error("The provided blob is not valid:", blob);
+        return;
+      }
+
+      const compressedBlob = await imageCompression(blob, { maxSizeMB: 0.5, maxWidthOrHeight: 800 });
+      if (compressedBlob) {
+        const reader = new FileReader();
+        reader.readAsDataURL(compressedBlob);
+        reader.onloadend = () => callback(reader.result);
+      } else {
+        alert("이미지 압축 실패.");
+      }
+    } catch (error) {
+      console.error("Image compression error:", error);
+      alert("이미지 압축 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleImageCompression = async (photo) => {
+    try {
+      if (!(photo instanceof Blob || photo instanceof File)) {
+        console.error("The provided photo is not a Blob or File instance:", photo);
+        return null;
+      }
+
+      // Check image size before compression
+      if (photo.size <= 0.5 * 1024 * 1024) {
+        console.log("Image is already small enough, skipping compression.");
+        return photo;
+      }
+
+      const compressedPhoto = await imageCompression(photo, { maxSizeMB: 0.5, maxWidthOrHeight: 800 });
+      return compressedPhoto;
+    } catch (error) {
+      console.error("Image compression error:", error);
+      // Handle specific error types if needed
+      if (error instanceof DOMException) {
+        console.error("DOMException occurred during image compression:", error.message);
+      } else {
+        console.error("Unknown error during image compression:", error);
+      }
+      return null;
+    }
+  };
+
+  const compressImageSrcInContent = (content) => {
+    const doc = new DOMParser().parseFromString(content, "text/html");
+    const images = doc.querySelectorAll("img");
+
+    images.forEach((img) => {
+      const src = img.getAttribute("src");
+      if (src && src.startsWith("data:image")) {
+        const shortenedBase64 = src.split(",")[1].substring(0, 100);
+        img.setAttribute("src", `${src.split(",")[0]},${shortenedBase64}...`);
+      }
+    });
+    return doc.body.innerHTML;
+  };
+
   const handleSubmit = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -103,24 +166,43 @@ const ForestComponent = () => {
       return;
     }
 
-    const diaryData = {
-      createdAt: selectedDate,
-      diary_title: diary_title,
-      diary_content: diary_content,
-      access_level: access_level,
-      post_photo: post_photo,
-      board_id: 1
-    };
+    const formData = new FormData();
+    formData.append('diary_title', diary_title);
+
+    const filteredContent = compressImageSrcInContent(editorRef.current.getInstance().getHTML());
+    formData.append('diary_content', filteredContent);
+
+    formData.append('access_level', access_level);
+    formData.append('board_id', 1);
+
+    if (post_photo) {
+      try {
+        const compressedPhoto = await handleImageCompression(new Blob([post_photo], { type: "image/jpeg" }));
+        if (compressedPhoto) {
+          formData.append('post_photo', compressedPhoto, 'compressed-image.jpg');
+        } else {
+          console.error("Image compression failed for post_photo");
+        }
+      } catch (error) {
+        console.error("Image compression error:", error);
+      }
+    }
 
     try {
       const response = await fetch('https://api.usdiary.site/diaries', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(diaryData), // 서버로 데이터 전송
+        body: formData, // 서버로 데이터 전송
       });
+
+      if (!response.ok) {
+        const errorResponse = await response.json(); // 오류 응답 로그 추가
+        console.error('서버에 오류가 발생했습니다:', errorResponse);
+        throw new Error('서버에 오류가 발생했습니다.');
+      }
+
       const result = await response.json();
       console.log('저장 완료:', result);
       navigate('/forest');
@@ -166,7 +248,6 @@ const ForestComponent = () => {
     }
   };
 
-
   const handleDelete = async () => {
     try {
       const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
@@ -202,7 +283,7 @@ const ForestComponent = () => {
       <div className="forest__diary-title-edit">
         <input
           type="text"
-          value={diary_title}
+          value={diary_title || ''}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={diaryData ? diaryData.diary_title : "제목"}
           className="forest__diary-title-edit-input"
@@ -235,6 +316,7 @@ const ForestComponent = () => {
               initialValue={diary ? diary.diary_content : ''} // 다이어리 내용이 없을 경우 빈 문자열
               ref={editorRef}
               onChange={onChangeGetHTML}
+              addImageBlobHook={addImageBlobHook}
               hideModeSwitch={true}
             />
           ) : (
@@ -243,7 +325,6 @@ const ForestComponent = () => {
             />
           )}
         </div>
-
       </div>
     </div>
   );

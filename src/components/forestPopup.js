@@ -26,30 +26,40 @@ const ForestPopup = ({ diary_id, onClose }) => {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        if (token) {
-            const decoded = jwtDecode(token);
-            const user_id = decoded.user_id; // 토큰에서 user_id 추출
-
-            const fetchUserProfile = async () => {
-                try {
-                    const response = await axios.get(`/mypages/profiles/${user_id}`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-
-                    // 응답 데이터에서 user_nick과 profile_img를 설정
-                    const profileData = response.data.data;
-                    setUserProfile({
-                        user_nick: profileData.user_nick,
-                        profile_img: profileData.profile_img,
-                    });
-                } catch (error) {
-                    console.error('Error fetching user profile:', error);
-                }
-            };
-
-            fetchUserProfile();
+        
+        if (!token) {
+            console.warn("No token found in localStorage.");
+            return;
         }
+    
+        const decoded = jwtDecode(token);
+        const user_id = decoded.user_id; // Extract user_id from token
+    
+        const fetchUserProfile = async () => {
+            try {
+                const response = await axios.get(`https://api.usdiary.site/mypages/profiles/${user_id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+    
+                // Check if the data exists in response
+                if (response.data && response.data.data) {
+                    const { user_nick, profile_img } = response.data.data;
+    
+                    setUserProfile({
+                        user_nick: user_nick || 'Unknown User',
+                        profile_img: profile_img || 'defaultProfileImg.jpg', // Fallback profile image if none exists
+                    });
+                } else {
+                    console.error("User profile data is missing in response:", response);
+                }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+            }
+        };
+    
+        fetchUserProfile();
     }, []);
+    
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -147,32 +157,33 @@ const ForestPopup = ({ diary_id, onClose }) => {
 
     // Comments data fetch
     useEffect(() => {
-        const token = localStorage.getItem('token');
-
-        const fetchComments = async () => {
-            try {
-                // 모든 댓글을 가져오는 엔드포인트
-                const response = await axios.get(`https://api.usdiary.site/diaries/${diary_id}/comments`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-
-                const commentsData = response.data?.data || [];
-                setComments(commentsData);
-                console.log('Comments Data:', commentsData);
-
-            } catch (error) {
-                const message = error.code === 'ECONNABORTED'
-                    ? '서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.'
-                    : '댓글을 불러오는 데 실패했습니다.';
-                setError(message);
-                console.error('Error fetching comments:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchComments();
-    }, [diary_id]);
+        // userProfile.user_nick이 설정된 이후에만 comments를 가져옴
+        if (userProfile.user_nick) {
+            const token = localStorage.getItem('token');
+    
+            const fetchComments = async () => {
+                try {
+                    const response = await axios.get(`https://api.usdiary.site/diaries/${diary_id}/comments`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    const commentsData = response.data?.data || [];
+                    setComments(commentsData);
+                    console.log('Comments Data:', commentsData);
+    
+                } catch (error) {
+                    const message = error.code === 'ECONNABORTED'
+                        ? '서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.'
+                        : '댓글을 불러오는 데 실패했습니다.';
+                    setError(message);
+                    console.error('Error fetching comments:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+    
+            fetchComments();
+        }
+    }, [userProfile.user_nick, diary_id]);
 
     useEffect(() => {
         const fetchLikeData = async () => {
@@ -271,42 +282,79 @@ const ForestPopup = ({ diary_id, onClose }) => {
     };
 
     const handleEditBlur = async (comment_id) => {
+        console.log("diary_id:", diary_id, "comment_id:", comment_id);
+    
         const commentEl = commentRefs.current[comment_id];
+        
         if (commentEl) {
-            const updatedComment = {
-                ...comments.find(comment => comment.comment_id === comment_id),
-                comment_text: commentEl.innerText,
-            };
-
+            const updatedContent = commentEl.innerText;
+    
             try {
-                await axios.put(`/comments/${diary_id}/comments/${comment_id}`, updatedComment);
-                setComments(comments.map(comment => comment.comment_id === comment_id ? updatedComment : comment));
+                const token = localStorage.getItem('token');
+    
+                // JWT에서 sign_id를 추출
+                const decodedToken = jwtDecode(token);
+                const loggedInSignId = decodedToken?.sign_id;
+    
+                console.log("Logged in sign_id:", loggedInSignId); // sign_id가 올바르게 추출되었는지 확인
+    
+                // 현재 댓글의 작성자와 로그인한 사용자 비교
+                const comment = comments.find(comment => comment.comment_id === comment_id);
+                if (!comment || comment.sign_id !== loggedInSignId) {
+                    console.log("You do not have permission to edit this comment.");
+                    setError("You do not have permission to edit this comment.");
+                    return;
+                }
+    
+                const response = await axios.put(
+                    `https://api.usdiary.site/diaries/${diary_id}/comments/${comment_id}`,
+                    { content: updatedContent },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+    
+                console.log('Response:', response.data);
+    
+                // Update comments in the state with the edited comment content
+                setComments(comments.map(comment =>
+                    comment.comment_id === comment_id
+                        ? { ...comment, content: updatedContent }
+                        : comment
+                ));
             } catch (err) {
                 setError('Failed to update comment');
-                console.error(err);
+                console.error('Error updating comment:', err.response?.data || err.message);
             }
         }
-        setEditingcomment_id(null);
+    
+        setEditingcomment_id(null); // Exit edit mode
     };
+    
 
     const handleDeleteClick = async (comment_id) => {
         try {
             const token = localStorage.getItem('token'); // JWT 토큰 가져오기
-            const response = await axios.delete(`/diaries/comments/${comment_id}`, {
+
+            const response = await axios.delete(`https://api.usdiary.site/diaries/comments/${comment_id}`, {
                 headers: { Authorization: `Bearer ${token}` }, // 토큰 헤더에 추가
+
             });
 
             // 상태 코드가 200일 때만 댓글 목록에서 삭제
             if (response.status === 200) {
                 setComments(prevComments => prevComments.filter(comment => comment.comment_id !== comment_id));
-                console.log('Comment deleted successfully:', comment_id);
+                console.log('Comment deleted successfully:', response.data.message);
                 return;
             }
 
             // 상태 코드가 404일 경우
             if (response.status === 404) {
                 setError('Comment not found');
-                console.error('Comment not found:', comment_id);
+                console.error('Comment not found:', response.data.message);
                 return;
             }
 
@@ -316,7 +364,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
 
         } catch (err) {
             setError('Failed to delete comment');
-            console.error('Error deleting comment:', err);
+            console.error('Error deleting comment:', err.response?.data.message || err.message);
         }
     };
 
@@ -431,7 +479,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                                             {editingcomment_id === comment.comment_id ? (
                                                 <button
                                                     className="forest-popup__edit-button"
-                                                    onClick={() => setEditingcomment_id(null)}
+                                                    onClick={() => handleEditBlur(comment.comment_id)}
                                                 >
                                                     저장
                                                 </button>
