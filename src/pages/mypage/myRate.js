@@ -17,6 +17,7 @@ const MyRate = () => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [diaryCards, setDiaryCards] = useState([]);
     const [user, setUser] = useState(null);
+    const [statistics, setStatistics] = useState({ forest: 0, city: 0, sea: 0 });
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -44,30 +45,43 @@ const MyRate = () => {
 
     const fetchDiariesByMonth = async (user_id, year, month) => {
         setDiaryCards([]); // 이전 데이터를 초기화하여 새로운 달의 데이터만 보여주도록 설정
-
+        let allDiaries = [];
+        let promises = [];
+        const maxPages = 5; // 한번에 가져올 최대 페이지 수
+    
         try {
-            const response = await axios.get(`/diaries?user_id=${user_id}&year=${year}&month=${month}&limit=31`);
-            console.log("Fetched diaryCards for user:", user_id, response.data.data.diary);
-
-            if (Array.isArray(response.data.data.diary)) {
-                // 가져온 데이터 중에서 정확한 연도와 월을 만족하는 데이터만 필터링
-                const filteredDiaries = response.data.data.diary.filter(diary => {
-                    const diaryDate = new Date(diary.createdAt);
-                    return (
-                        diaryDate.getFullYear() === year &&
-                        diaryDate.getMonth() + 1 === month
-                    );
-                });
-                setDiaryCards(filteredDiaries);
-            } else {
-                console.error('일기 데이터 형식이 잘못되었습니다:', response.data);
-                setDiaryCards([]);
+            // 페이지를 병렬로 요청하여 데이터를 빠르게 가져오기
+            for (let page = 1; page <= maxPages; page++) {
+                promises.push(axios.get(`https://api.usdiary.site/diaries?user_id=${user_id}&year=${year}&month=${month}&page=${page}`));
             }
+    
+            const responses = await Promise.all(promises);
+    
+            responses.forEach(response => {
+                const diaryData = response.data.data.diary;
+                if (Array.isArray(diaryData) && diaryData.length > 0) {
+                    allDiaries = allDiaries.concat(diaryData);
+                }
+            });
+    
+            // 필터링 및 상태 업데이트
+            const filteredDiaries = allDiaries.filter(diary => {
+                const diaryDate = new Date(diary.createdAt);
+                return (
+                    diaryDate.getFullYear() === year &&
+                    diaryDate.getMonth() + 1 === month
+                );
+            });
+    
+            console.log(filteredDiaries);
+            setDiaryCards(filteredDiaries);
         } catch (error) {
             console.error('일기를 가져오는 중 오류 발생:', error);
             setDiaryCards([]);
+            setStatistics({ forest: 0, city: 0, sea: 0 });
         }
     };
+    
 
     if (!user) {
         return <div>Loading...</div>;
@@ -86,19 +100,6 @@ const MyRate = () => {
             console.log('Unknown board_id');
         }
     };
-
-    const filterDiariesByPreference = (user_tendency) => {
-        const categories = {
-            '숲': 1,
-            '도시': 2,
-            '바다': 3,
-        };
-        return diaryCards.filter(diary => diary.board_id === categories[user_tendency]);
-    };
-
-    const preferenceDiaries = filterDiariesByPreference(user.user_tendency);
-    const totalDiaries = diaryCards.length;
-    const percentage = totalDiaries ? ((preferenceDiaries.length / totalDiaries) * 100).toFixed(2) : 0;
 
     const getDaysInMonth = (year, month) => {
         const date = new Date(year, month, 1);
@@ -186,9 +187,9 @@ const MyRate = () => {
                             <>
                                 <img src={user.Profile ? user.Profile.profile_img : defaultImage} alt='Profile' className='profile-image' />
                                 <div className='profile-summary'>
-                                    <h3 className='profile-tendency'>{user.user_nick}님은 {percentage}% {user.user_tendency} 성향이에요</h3>
+                                <h3 className='profile-tendency'>{user.user_nick}님은 {statistics[user.user_tendency]}% {user.user_tendency} 성향이에요</h3>
                                     <div className='progress-bar'>
-                                        <div className='progress-bar-fill' style={{ width: `${percentage}%` }}></div>
+                                        <div className='progress-bar-fill' style={{ width: `${statistics[user.user_tendency]}%` }}></div>
                                     </div>
                                 </div>
                             </>

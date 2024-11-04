@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import DiaryCard from '../../components/diaryCard';
+import GuidePopup from '../../components/guide';
 import SeaPopup from "../../components/seaPopup";
 import DiaryFilter from "../../components/diaryFilter";
 import '../../assets/css/sea.css'; // Ensure this CSS file is correctly named and located.
@@ -120,6 +121,8 @@ const Sea = () => {
     };
 
     return (
+    <div className="page">
+        <GuidePopup />
         <div className="wrap">
             <Menu />
             <div className="sea-page__container">
@@ -184,6 +187,7 @@ const Sea = () => {
                 )}
             </div>
         </div>
+    </div>
     );
 }
 

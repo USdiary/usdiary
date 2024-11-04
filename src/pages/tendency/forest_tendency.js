@@ -5,6 +5,7 @@ import GuidePopup from '../../components/guide';
 import '../../assets/css/forest_tendency.css';
 import BigtreeImage from '../../assets/images/bigtree.png';
 import MincityImage from '../../assets/images/mincity.png';
+import { jwtDecode } from 'jwt-decode';
 
 function ForestTendency() {
   const navigate = useNavigate();
@@ -41,6 +42,53 @@ function ForestTendency() {
     fetchUserData(); // 컴포넌트 마운트 시 사용자 정보 가져오기
   }, []);
 
+  const handleSubmit = async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      console.error('로그인 정보가 없습니다.');
+      return;
+    }
+
+    // Decode the token to get userId
+    const decodedToken = jwtDecode(token);
+    const sign_id = decodedToken.sign_id;
+
+    if (!sign_id) {
+      console.error('User ID not found in token.');
+      return;
+    }
+
+    console.log(token, sign_id);
+
+    try {
+      const response = await fetch(`https://api.usdiary.site/users/${sign_id}/tendency`, { // Corrected line
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ selection: 'forest' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('서버에 오류가 발생했습니다.');
+      }
+
+      const data = await response.json();
+      console.log('Server response:', data);
+
+      if (data.message === '성향이 성공적으로 수정되었습니다.') {
+        console.log("Navigating to home...");
+        navigate('/home', { state: { userTendency: '숲' } });
+      } else {
+        console.error("성향 업데이트 실패");
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
   if (error) {
     return <div>{error}</div>;
   }
@@ -73,7 +121,7 @@ function ForestTendency() {
                   </p>
                 </div>
               </div>
-              <button className="forest_tendency_submit-button">숲 성향으로 결정하기</button>
+              <button className="forest_tendency_submit-button" onClick={handleSubmit}>숲 성향으로 결정하기</button>
               <p className="forest_tendency_note">* 일주일 동안 성향 변경이 가능합니다</p>
             </div>
             <img src={BigtreeImage} alt="forest_tendency_Description" className="forest_tendency_info-image" />
