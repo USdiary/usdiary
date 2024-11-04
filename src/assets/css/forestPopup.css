@@ -124,6 +124,7 @@
     margin-right: 10px;
     padding: 5px;
     object-fit: cover;
+    border: 1px solid #f0f0f0;
 }
 
 /* 댓글 입력 필드 */
@@ -190,6 +191,7 @@
     border-radius: 50%;
     object-fit: cover;
     margin-right: 10px; /* 프로필 사진과 댓글 내용 사이의 간격 */
+    border: 1px solid #f0f0f0;
 }
 
 /* 댓글 내용 섹션 */
@@ -376,6 +378,8 @@
     height: 30px;
     border-radius: 50%;
     margin-right: 10px;
+    object-fit: cover;
+    border: 1px solid #f0f0f0;
 }
 
 .forest-popup__author-nickname {
@@ -394,11 +398,17 @@
     border: none;
     cursor: pointer;
     margin-left: 10px;
+    display: center;
+    align-items: center;
 }
 
 .forest-popup__report-button img,
 .forest-popup__like-button img {
     width: 24px;
     height: 24px;
+}
+
+.forest-popup__like-count {
+    margin-left: 5px;
 }
 

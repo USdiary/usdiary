@@ -1,11 +1,29 @@
 import React, { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 import Forest from "./forest";
 import City from "./city";
 
 const Home = () => {
+    const navigate = useNavigate();
     const location = useLocation();
     const userTendency = location.state?.userTendency; // location.state에서 userTendency 가져오기
+
+    useEffect(() => {
+        // Decode the token and check last_login
+        const token = localStorage.getItem("token");
+        
+        if (token) {
+            const decodedToken = jwtDecode(token);
+            console.log("Decoded token:", decodedToken);
+
+            // If last_login is null, navigate to /question page
+            if (!decodedToken.last_login && !userTendency) { // Assuming null or undefined
+                navigate("/question", { replace: true });
+                return;
+            }
+        }
+    }, [navigate, userTendency]);
 
     useEffect(() => {
         if (userTendency) {
