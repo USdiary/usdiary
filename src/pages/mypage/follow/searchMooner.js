@@ -26,21 +26,21 @@ const SearchMooner = ({ onClose }) => {
 
     // 검색어에 따라 entireUsers를 필터링
     const filteredUsers = entireUsers.filter(user => 
-        user.id.includes(searchText)
+        user.nickname.includes(searchText)
     );
 
     return (
         <div className="mooner_popup-overlay">
             <div className="mooner_popup-content">
                 <img src={exit} className="mooner_popup_close" alt="Close popup" onClick={onClose}/>
-                <div className='mooner_popup_name'>아이디로 무너 찾기</div>
+                <div className='mooner_popup_name'>닉네임으로 무너 찾기</div>
                 <div className='mooner_popup_search-id'>
                     <img src={search} alt="Search icon" />
                     <input 
                         type="text" 
                         value={searchText}
                         onChange={handleInputChange}
-                        placeholder="아이디 검색"
+                        placeholder="닉네임 검색"
                         className='mooner_popup_search-id_input'
                     />
                 </div>

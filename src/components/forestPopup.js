@@ -7,6 +7,7 @@ import ReportPopup from './reportPopup';
 import { jwtDecode } from 'jwt-decode';
 import { Viewer } from '@toast-ui/react-editor';
 import defaultImage from '../assets/images/default.png';
+import MoonerPopup from '../pages/mypage/follow/moonerPopup'
 
 const ForestPopup = ({ diary_id, onClose }) => {
     const [diary, setDiary] = useState(null);
@@ -20,6 +21,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
     const commentRefs = useRef({});
     const [liked, setLiked] = useState(false);
     const [userProfile, setUserProfile] = useState({ user_nick: '', profile_img: '' });
+    const [isMoonerPopupOpen, setIsMoonerPopupOpen] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -38,6 +40,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                     setUserProfile({
                         user_nick: profileData.user_nick,
                         profile_img: profileData.profile_img,
+                        user_tendency: profileData.user_tendency
                     });
                 } catch (error) {
                     console.error('Error fetching user profile:', error);
@@ -208,7 +211,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                             },
                         },
                     };
-    
+
                     setComments(prevComments => [...prevComments, newCommentWithUser]);
                     setNewComment("");
                     console.log(response.data.message); // 댓글 생성 성공 메시지 로그
@@ -332,15 +335,36 @@ const ForestPopup = ({ diary_id, onClose }) => {
         </svg>
     );
 
+    // MoonerPopup 열기 핸들러
+    const handleOpenMoonerPopup = () => {
+        setIsMoonerPopupOpen(true);
+    };
+
+    // MoonerPopup 닫기 핸들러
+    const handleCloseMoonerPopup = () => {
+        setIsMoonerPopupOpen(false);
+    };
+
+    // follower 데이터 구성
+    const follower = {
+        friend_profile_img: diary?.User?.Profile?.profile_img || defaultImage,
+        friend_nick: diary?.User?.user_nick || 'User',
+        user_tendency: diary?.User?.user_tendency
+    };
+
     return (
         <div>
             <div className="forest-popup" onClick={handleBackgroundClick}>
                 <div className="forest-popup__content">
                     <div className='forest-popup__header'>
-                        <div className='forest-popup__header-left'>
+                        <div className='forest-popup__header-left' onClick={handleOpenMoonerPopup}>
                             <img src={diary?.User?.Profile?.profile_img || defaultImage} alt={`${diary?.User?.user_nick || 'User'}'s profile`} className="forest-popup__author-profile-image" />
                             <p className="forest-popup__author-nickname">{diary?.User?.user_nick || 'User'}님</p>
                         </div>
+                        {/* MoonerPopup 컴포넌트를 조건부로 렌더링 */}
+                        {isMoonerPopupOpen && (
+                            <MoonerPopup follower={follower} onClose={handleCloseMoonerPopup} />
+                        )}
                         <div className="forest-popup__header-right">
                             <button className="forest-popup__report-button" onClick={handleReportButtonClick}>
                                 <img src={sirenIcon} alt="Report icon" />
