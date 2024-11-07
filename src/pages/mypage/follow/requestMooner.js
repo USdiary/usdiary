@@ -8,7 +8,7 @@ const RequestMooner = ({ onClose }) => {
     const [entireUsers, setEntireUsers] = useState([]);
 
     useEffect(() => {
-        axios.get('/friends/follow-request/handle') // 서버의 엔드포인트로 변경
+        axios.get('https://api.usdiary.site/friends/follow-request/handle') // 서버의 엔드포인트로 변경
             .then((response) => {
                 setEntireUsers(response.data); // 서버로부터 받은 데이터를 상태로 설정
             })
@@ -18,7 +18,7 @@ const RequestMooner = ({ onClose }) => {
     }, []);
     
     const handleAccept = (user) => {
-        axios.post('/friends/follow-request/handle', {
+        axios.post('https://api.usdiary.site/friends/follow-request/handle', {
             data: {
                 follower_sign_id: user.id,
                 follower_user_nick: user.nickname,
@@ -32,7 +32,7 @@ const RequestMooner = ({ onClose }) => {
     };
     
     const handleRefuse = (user) => {
-        axios.post('/friends/follow-request/handle', {
+        axios.post('https://api.usdiary.site/friends/follow-request/handle', {
             data: {
                 follower_sign_id: user.id,
                 follower_user_nick: user.nickname,

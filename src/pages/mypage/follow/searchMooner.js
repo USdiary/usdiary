@@ -15,7 +15,7 @@ const SearchMooner = ({ onClose }) => {
 
     // 서버에서 데이터를 받아오는 부분
     useEffect(() => {
-        axios.get('/follow') // 서버의 엔드포인트로 변경
+        axios.get(`https://api.usdiary.site/friends/search?user_nick=${searchText}`)
             .then((response) => {
                 setEntireUsers(response.data);
             })
