@@ -79,9 +79,9 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="pro_page">
+    <div className='wrap'>
       <Menu />
-      <div className="pro_page-container">
+      <div className='profile'>
         <ProfileMenu />
         <div className="pro_content-box">
           <div className="pro_profile-section">

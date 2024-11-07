@@ -52,13 +52,12 @@ const Contact = () => {
     return (
         <div className='wrap'>
             <Menu />
-            <div className='contact'>
+            <div className='profile'>
                 <ProfileMenu />
                 <div className='contact-contents'>
-                    <h1 className='contact-title'>고객 지원</h1>
+                    <div className='contact-title'>고객 지원</div>
                     <form className='contact-form' onSubmit={handleSubmit}>
                         <div className='form-group'>
-                            <label htmlFor='title'></label>
                             <input
                                 type='text'
                                 id='title'
@@ -69,7 +68,6 @@ const Contact = () => {
                             />
                         </div>
                         <div className='form-group'>
-                            <label htmlFor='email'></label>
                             <input
                                 type='email'
                                 id='email'
@@ -80,7 +78,6 @@ const Contact = () => {
                             />
                         </div>
                         <div className='form-group'>
-                            <label htmlFor='inquiry'></label>
                             <textarea
                                 id='inquiry'
                                 placeholder='문의 사항을 자유롭게 남겨주세요...'

@@ -2,12 +2,11 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Viewer, Editor } from '@toast-ui/react-editor';
 import '@toast-ui/editor/dist/toastui-editor.css';
-import axios from 'axios'; // axios 임포트
-import imageCompression from 'browser-image-compression';
+import axios from 'axios';
 
 import tree from '../assets/images/tree.png';
-import DateSelector from './dateSelector'; // DateSelector 컴포넌트 불러오기
-import RevealOptions from './revealOptions'; // RevealOptions 컴포넌트 불러오기
+import DateSelector from './dateSelector';
+import RevealOptions from './revealOptions';
 import DropdownMenu from './dropdownMenu';
 
 const ForestComponent = () => {
@@ -15,144 +14,127 @@ const ForestComponent = () => {
   const location = useLocation();
   const { diary } = location.state || {};
 
-  const [currentDate, setCurrentDate] = useState(new Date()); // 현재 날짜
-  const [selectedDate, setSelectedDate] = useState(new Date()); // 선택된 날짜
-  const [diary_title, setTitle] = useState(''); // 제목
-  const [diary_content, setEditorData] = useState(''); // 에디터 내용
-  const [access_level, setSelectedDiv] = useState(0); // 공개범위
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [diary_title, setTitle] = useState('');
+  const [diary_content, setEditorData] = useState('');
+  const [access_level, setSelectedDiv] = useState(0);
   const [diaryData, setDiaryData] = useState(null);
   const [post_photo, setFirstImageUrl] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const editorRef = useRef(); // 에디터 ref
+  const editorRef = useRef();
+  const [error, setError] = useState(null);
 
-  // Axios로 다이어리 데이터 fetch
+  const extractFirstImageUrl = (content) => {
+    const imageRegex = /<img[^>]+src="([^">]+)"/;
+    const match = content.match(imageRegex);
+    return match ? match[1] : null;
+  };
+
   const fetchDiaryData = useCallback(async () => {
     try {
-      const response = await axios.get(`https://api.usdiary.site/diaries`, {
-        params: { date: selectedDate.toISOString().split('T')[0] } // 날짜를 query parameter로 전달
+      const response = await axios.get('/diaries', {
+        params: { date: selectedDate.toISOString().split('T')[0] }
       });
-      setDiaryData(response.data); // 불러온 데이터 설정
-      setTitle(response.data.diary_title); // 제목 업데이트
+      setDiaryData(response.data);
+      setTitle(response.data.diary_title);
       if (editorRef.current) {
-        editorRef.current.getInstance().setHTML(response.data.diary_content); // 에디터 내용 설정
+        editorRef.current.getInstance().setHTML(response.data.diary_content);
       }
     } catch (error) {
       console.error("Error fetching diary data:", error);
     }
   }, [selectedDate]);
 
+
   useEffect(() => {
     if (diary) {
-      setTitle(diary.diary_title); // 제목 업데이트
+      setTitle(diary.diary_title);
       if (editorRef.current) {
-        editorRef.current.getInstance().setHTML(diary.diary_content); // 내용 설정
+        editorRef.current.getInstance().setHTML(diary.diary_content);
       }
       const createdAtDate = new Date(diary.createdAt);
       setSelectedDate(createdAtDate);
       setCurrentDate(createdAtDate);
     } else {
-      fetchDiaryData(); // 다이어리가 없을 때만 데이터 fetch
+      fetchDiaryData();
     }
   }, [diary]);
 
-  // 선택된 날짜로 currentDate 업데이트
   const handleDateClick = (date) => {
     const today = new Date();
     const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1); // 전날을 계산
+    yesterday.setDate(today.getDate() - 1);
 
-    const selectedDate = new Date(date).toDateString();
-    const todayDate = today.toDateString();
-    const yesterdayDate = yesterday.toDateString();
-
-    if (selectedDate === todayDate || selectedDate === yesterdayDate) {
+    if ([today.toDateString(), yesterday.toDateString()].includes(new Date(date).toDateString())) {
       setSelectedDate(date);
-      setCurrentDate(new Date(date)); // 클릭한 날짜를 가운데로 위치
+      setCurrentDate(new Date(date));
       fetchDiaryData();
     }
   };
 
-  // 공개범위 클릭 핸들러
-  const handleDivClick = (index) => {
-    setSelectedDiv(index);
-  };
-
-  const extractFirstImageUrl = (html) => {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const img = doc.querySelector('img'); // 첫 번째 이미지 요소 선택
-    return img ? img.src : null; // 이미지가 있으면 src 속성을 반환
-  };
+  const handleDivClick = (index) => setSelectedDiv(index);
 
   const onChangeGetHTML = () => {
     if (editorRef.current && !diary) {
       const data = editorRef.current.getInstance().getHTML();
       setEditorData(data);
-      const firstImageUrl = extractFirstImageUrl(data);
-      setFirstImageUrl(firstImageUrl);
     }
   };
 
-  const addImageBlobHook = async (blob, callback) => {
-    try {
-      if (!(blob instanceof Blob)) {
-        console.error("The provided blob is not valid:", blob);
-        return;
-      }
+  // 이미지 압축 함수
+  const compressImage = (file) => new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const maxWidth = 800; // 최대 너비 설정
+        const scaleSize = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * scaleSize;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  
+        // 이미지 품질을 0.7로 설정해 압축
+        canvas.toBlob((blob) => resolve(blob), file.type, 0.7);
+      };
+    };
+    reader.readAsDataURL(file);
+  });
 
-      const compressedBlob = await imageCompression(blob, { maxSizeMB: 0.5, maxWidthOrHeight: 800 });
-      if (compressedBlob) {
-        const reader = new FileReader();
-        reader.readAsDataURL(compressedBlob);
-        reader.onloadend = () => callback(reader.result);
-      } else {
-        alert("이미지 압축 실패.");
-      }
-    } catch (error) {
-      console.error("Image compression error:", error);
-      alert("이미지 압축 중 오류가 발생했습니다.");
-    }
-  };
+  // 이미지 업로드 함수
+const handleImageUpload = async (file, callback) => {
+  try {
+    // 이미지를 압축합니다.
+    const compressedFile = await compressImage(file);
 
-  const handleImageCompression = async (photo) => {
-    try {
-      if (!(photo instanceof Blob || photo instanceof File)) {
-        console.error("The provided photo is not a Blob or File instance:", photo);
-        return null;
-      }
+    const formData = new FormData();
+    formData.append('file', compressedFile); // 압축된 파일을 FormData에 추가
 
-      // Check image size before compression
-      if (photo.size <= 0.5 * 1024 * 1024) {
-        console.log("Image is already small enough, skipping compression.");
-        return photo;
-      }
+    const token = localStorage.getItem('token'); // 토큰 가져오기
 
-      const compressedPhoto = await imageCompression(photo, { maxSizeMB: 0.5, maxWidthOrHeight: 800 });
-      return compressedPhoto;
-    } catch (error) {
-      console.error("Image compression error:", error);
-      // Handle specific error types if needed
-      if (error instanceof DOMException) {
-        console.error("DOMException occurred during image compression:", error.message);
-      } else {
-        console.error("Unknown error during image compression:", error);
-      }
-      return null;
-    }
-  };
-
-  const compressImageSrcInContent = (content) => {
-    const doc = new DOMParser().parseFromString(content, "text/html");
-    const images = doc.querySelectorAll("img");
-
-    images.forEach((img) => {
-      const src = img.getAttribute("src");
-      if (src && src.startsWith("data:image")) {
-        const shortenedBase64 = src.split(",")[1].substring(0, 100);
-        img.setAttribute("src", `${src.split(",")[0]},${shortenedBase64}...`);
-      }
+    const response = await axios.post('https://api.usdiary.site/diaries/upload', formData, {
+      headers: {
+        'Authorization': `Bearer ${token}`, // 토큰 추가
+        'Content-Type': 'multipart/form-data' // multipart 형식 지정
+      },
+      timeout: 10000,
     });
-    return doc.body.innerHTML;
-  };
+
+    if (response.data && response.data.imageUrl) {
+      // 서버에서 받은 이미지 URL로 에디터에 삽입
+      callback(response.data.imageUrl, '이미지 설명');
+    } else {
+      throw new Error('이미지 URL을 받지 못했습니다.');
+    }
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    alert("이미지 업로드 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+  }
+};
+
 
   const handleSubmit = async () => {
     const token = localStorage.getItem('token');
@@ -160,33 +142,20 @@ const ForestComponent = () => {
       alert("로그인이 필요합니다.");
       return;
     }
-
     if (!diary_title || !diary_content) {
       alert("제목과 내용을 모두 입력해주세요.");
       return;
     }
 
-    const formData = new FormData();
-    formData.append('diary_title', diary_title);
-
-    const filteredContent = compressImageSrcInContent(editorRef.current.getInstance().getHTML());
-    formData.append('diary_content', filteredContent);
-
-    formData.append('access_level', access_level);
-    formData.append('board_id', 1);
-
-    if (post_photo) {
-      try {
-        const compressedPhoto = await handleImageCompression(new Blob([post_photo], { type: "image/jpeg" }));
-        if (compressedPhoto) {
-          formData.append('post_photo', compressedPhoto, 'compressed-image.jpg');
-        } else {
-          console.error("Image compression failed for post_photo");
-        }
-      } catch (error) {
-        console.error("Image compression error:", error);
-      }
-    }
+    // 이미지 URL 상태에 저장된 값을 사용
+    const diaryData = {
+      createdAt: selectedDate,
+      diary_title,
+      diary_content,
+      access_level,
+      post_photo,  // 업로드된 이미지 URL 포함
+      board_id: 1,
+    };
 
     try {
       const response = await fetch('https://api.usdiary.site/diaries', {
@@ -194,26 +163,21 @@ const ForestComponent = () => {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
-        body: formData, // 서버로 데이터 전송
+        body: JSON.stringify(diaryData),
       });
 
       if (!response.ok) {
-        const errorResponse = await response.json(); // 오류 응답 로그 추가
-        console.error('서버에 오류가 발생했습니다:', errorResponse);
-        throw new Error('서버에 오류가 발생했습니다.');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
-      console.log('저장 완료:', result);
-      navigate('/forest');
+      console.log('저장 완료:', await response.json());
+      setIsEditing(false);
     } catch (error) {
       console.error("Error submitting diary:", error);
     }
   };
 
-  const handleEdit = () => {
-    setIsEditing(true); // 편집 모드로 전환
-  };
+  const handleEdit = () => setIsEditing(true);
 
   const handleUpdate = async () => {
     if (!diary) return;
@@ -239,7 +203,7 @@ const ForestComponent = () => {
 
       if (response.ok) {
         console.log('수정 완료:', await response.json());
-        setIsEditing(false); // 수정 후 편집 모드 해제
+        setIsEditing(false);
       } else {
         console.error('수정 실패:', response.statusText);
       }
@@ -253,11 +217,9 @@ const ForestComponent = () => {
       const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'DELETE',
       });
-
       if (response.status === 204) {
         console.log('삭제 완료');
         navigate('/mypage/myRate');
-        // 삭제 후 처리 (예: 목록으로 돌아가기)
       } else {
         console.error('Error deleting diary');
       }
@@ -293,38 +255,33 @@ const ForestComponent = () => {
       </div>
       <div className="forest__diary-actions">
         <RevealOptions selectedDiv={access_level} onDivClick={handleDivClick} />
-        {!diary && (
-          <div className="forest__diary-another-submit" onClick={handleSubmit}>발행</div>
-        )}
-        {diary && (
-          <>
-            {isEditing ? (
-              <div className="forest__diary-another-submit" onClick={handleUpdate}>수정 완료</div>
-            ) : (
-              <DropdownMenu onEdit={handleEdit} onDelete={handleDelete} />
-            )}
-          </>
+        {!diary ? (
+          <div className="forest__diary-another-submit" onClick={() => { if (!isEditing) handleSubmit(); }}>발행</div>
+        ) : (
+          isEditing ? (
+            <div className="forest__diary-another-submit" onClick={handleUpdate}>수정 완료</div>
+          ) : (
+            <DropdownMenu onEdit={handleEdit} onDelete={handleDelete} />
+          )
         )}
       </div>
       <div className="forest__diary-texts">
-        <div className="forest__diary-texts">
-          {isEditing || !diary ? (
-            <Editor
-              toolbarItems={[['heading', 'bold', 'italic', 'strike'], ['image', 'link']]}
-              height="100%"
-              initialEditType="wysiwyg"
-              initialValue={diary ? diary.diary_content : ''} // 다이어리 내용이 없을 경우 빈 문자열
-              ref={editorRef}
-              onChange={onChangeGetHTML}
-              addImageBlobHook={addImageBlobHook}
-              hideModeSwitch={true}
-            />
-          ) : (
-            <Viewer
-              initialValue={`<div style="padding: 20px; font-size: large;">${diary ? diary.diary_content : ''}</div>`} // 다이어리 데이터가 있을 때 Viewer로 내용만 표시
-            />
-          )}
-        </div>
+        {isEditing || !diary ? (
+          <Editor
+            toolbarItems={[['heading', 'bold', 'italic', 'strike'], ['image', 'link']]}
+            height="100%"
+            initialEditType="wysiwyg"
+            hideModeSwitch={true}
+            ref={editorRef}
+            onChange={onChangeGetHTML}
+            hooks={{
+              addImageBlobHook: (file, callback) => handleImageUpload(file, callback)
+            }}
+          />
+
+        ) : (
+          <Viewer initialValue={diary_content} />
+        )}
       </div>
     </div>
   );
