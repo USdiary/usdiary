@@ -4,7 +4,7 @@ import '../assets/css/diaryCard.css';
 import axios from 'axios';
 import defaultImg from '../assets/images/default.png';
 
-const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nick, board_name, isFriendPage, diary_id, user_id, onClick }) => {
+const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nick, board_name, isFriendPage, diary_id, onClick }) => {
     const [liked, setLiked] = useState(false);
 
     /*
@@ -59,6 +59,8 @@ const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nic
         </svg>
     );
 
+    const strippedContent = diary_content.replace(/<\/?[^>]+(>|$)/g, '');
+
     const getBorderClass = () => {
         if (isFriendPage) return 'friend-border';
         switch (board_name) {
@@ -82,16 +84,16 @@ const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nic
                 </span>
             </div>
             <img
-                src={post_photo && post_photo !== '' ? post_photo : defaultImg}
+                src={post_photo && post_photo.length > 0 ? post_photo : defaultImg}
                 alt={diary_title}
                 className="diary-image"
             />
             <div className="diary-content">
                 <h2 className="diary-title">{diary_title}</h2>
                 <p className="diary-date">{formattedDate}</p>
-                <p className="diary-summary">{diary_content.replace(/<[^>]+>/g, '').length > 20
-                    ? diary_content.replace(/<[^>]+>/g, '').substring(0, 20) + ' ...'
-                    : diary_content.replace(/<[^>]+>/g, '')}</p>
+                <p className="diary-summary">
+                    {strippedContent.length > 20 ? `${strippedContent.substring(0, 20)} ...` : strippedContent}
+                </p>
             </div>
         </div>
     );

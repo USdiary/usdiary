@@ -2,7 +2,12 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Viewer, Editor } from '@toast-ui/react-editor';
 import '@toast-ui/editor/dist/toastui-editor.css';
+<<<<<<< HEAD
 import axios from 'axios';
+=======
+import axios from 'axios'; // axios 임포트
+import imageCompression from 'browser-image-compression';
+>>>>>>> ffb64202dc9dd78ff8c1120fb1c75324fca0057b
 
 import tree from '../assets/images/tree.png';
 import DateSelector from './dateSelector';
@@ -33,8 +38,13 @@ const ForestComponent = () => {
 
   const fetchDiaryData = useCallback(async () => {
     try {
+<<<<<<< HEAD
       const response = await axios.get('/diaries', {
         params: { date: selectedDate.toISOString().split('T')[0] }
+=======
+      const response = await axios.get(`https://api.usdiary.site/diaries`, {
+        params: { date: selectedDate.toISOString().split('T')[0] } // 날짜를 query parameter로 전달
+>>>>>>> ffb64202dc9dd78ff8c1120fb1c75324fca0057b
       });
       setDiaryData(response.data);
       setTitle(response.data.diary_title);
@@ -59,7 +69,7 @@ const ForestComponent = () => {
     } else {
       fetchDiaryData();
     }
-  }, [diary, fetchDiaryData]);
+  }, [diary]);
 
   const handleDateClick = (date) => {
     const today = new Date();
@@ -82,6 +92,7 @@ const ForestComponent = () => {
     }
   };
 
+<<<<<<< HEAD
   // 이미지 압축 함수
   const compressImage = (file) => new Promise((resolve) => {
     const reader = new FileReader();
@@ -135,6 +146,69 @@ const handleImageUpload = async (file, callback) => {
   }
 };
 
+=======
+  const addImageBlobHook = async (blob, callback) => {
+    try {
+      if (!(blob instanceof Blob)) {
+        console.error("The provided blob is not valid:", blob);
+        return;
+      }
+
+      const compressedBlob = await imageCompression(blob, { maxSizeMB: 0.5, maxWidthOrHeight: 800 });
+      if (compressedBlob) {
+        const reader = new FileReader();
+        reader.readAsDataURL(compressedBlob);
+        reader.onloadend = () => callback(reader.result);
+      } else {
+        alert("이미지 압축 실패.");
+      }
+    } catch (error) {
+      console.error("Image compression error:", error);
+      alert("이미지 압축 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleImageCompression = async (photo) => {
+    try {
+      if (!(photo instanceof Blob || photo instanceof File)) {
+        console.error("The provided photo is not a Blob or File instance:", photo);
+        return null;
+      }
+
+      // Check image size before compression
+      if (photo.size <= 0.5 * 1024 * 1024) {
+        console.log("Image is already small enough, skipping compression.");
+        return photo;
+      }
+
+      const compressedPhoto = await imageCompression(photo, { maxSizeMB: 0.5, maxWidthOrHeight: 800 });
+      return compressedPhoto;
+    } catch (error) {
+      console.error("Image compression error:", error);
+      // Handle specific error types if needed
+      if (error instanceof DOMException) {
+        console.error("DOMException occurred during image compression:", error.message);
+      } else {
+        console.error("Unknown error during image compression:", error);
+      }
+      return null;
+    }
+  };
+
+  const compressImageSrcInContent = (content) => {
+    const doc = new DOMParser().parseFromString(content, "text/html");
+    const images = doc.querySelectorAll("img");
+
+    images.forEach((img) => {
+      const src = img.getAttribute("src");
+      if (src && src.startsWith("data:image")) {
+        const shortenedBase64 = src.split(",")[1].substring(0, 100);
+        img.setAttribute("src", `${src.split(",")[0]},${shortenedBase64}...`);
+      }
+    });
+    return doc.body.innerHTML;
+  };
+>>>>>>> ffb64202dc9dd78ff8c1120fb1c75324fca0057b
 
   const handleSubmit = async () => {
     const token = localStorage.getItem('token');
@@ -147,6 +221,7 @@ const handleImageUpload = async (file, callback) => {
       return;
     }
 
+<<<<<<< HEAD
     // 이미지 URL 상태에 저장된 값을 사용
     const diaryData = {
       createdAt: selectedDate,
@@ -156,14 +231,37 @@ const handleImageUpload = async (file, callback) => {
       post_photo,  // 업로드된 이미지 URL 포함
       board_id: 1,
     };
+=======
+    const formData = new FormData();
+    formData.append('diary_title', diary_title);
+
+    const filteredContent = compressImageSrcInContent(editorRef.current.getInstance().getHTML());
+    formData.append('diary_content', filteredContent);
+
+    formData.append('access_level', access_level);
+    formData.append('board_id', 1);
+
+    if (post_photo) {
+      try {
+        const compressedPhoto = await handleImageCompression(new Blob([post_photo], { type: "image/jpeg" }));
+        if (compressedPhoto) {
+          formData.append('post_photo', compressedPhoto, 'compressed-image.jpg');
+        } else {
+          console.error("Image compression failed for post_photo");
+        }
+      } catch (error) {
+        console.error("Image compression error:", error);
+      }
+    }
+>>>>>>> ffb64202dc9dd78ff8c1120fb1c75324fca0057b
 
     try {
       const response = await fetch('https://api.usdiary.site/diaries', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
+<<<<<<< HEAD
         body: JSON.stringify(diaryData),
       });
 
@@ -173,6 +271,20 @@ const handleImageUpload = async (file, callback) => {
 
       console.log('저장 완료:', await response.json());
       setIsEditing(false);
+=======
+        body: formData, // 서버로 데이터 전송
+      });
+
+      if (!response.ok) {
+        const errorResponse = await response.json(); // 오류 응답 로그 추가
+        console.error('서버에 오류가 발생했습니다:', errorResponse);
+        throw new Error('서버에 오류가 발생했습니다.');
+      }
+
+      const result = await response.json();
+      console.log('저장 완료:', result);
+      navigate('/forest');
+>>>>>>> ffb64202dc9dd78ff8c1120fb1c75324fca0057b
     } catch (error) {
       console.error("Error submitting diary:", error);
     }
@@ -246,7 +358,7 @@ const handleImageUpload = async (file, callback) => {
       <div className="forest__diary-title-edit">
         <input
           type="text"
-          value={diary_title}
+          value={diary_title || ''}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={diaryData ? diaryData.diary_title : "제목"}
           className="forest__diary-title-edit-input"
@@ -267,6 +379,7 @@ const handleImageUpload = async (file, callback) => {
         )}
       </div>
       <div className="forest__diary-texts">
+<<<<<<< HEAD
         {isEditing || !diary ? (
           <Editor
             toolbarItems={[['heading', 'bold', 'italic', 'strike'], ['image', 'link']]}
@@ -283,6 +396,26 @@ const handleImageUpload = async (file, callback) => {
         ) : (
           <Viewer initialValue={diary_content} />
         )}
+=======
+        <div className="forest__diary-texts">
+          {isEditing || !diary ? (
+            <Editor
+              toolbarItems={[['heading', 'bold', 'italic', 'strike'], ['image', 'link']]}
+              height="100%"
+              initialEditType="wysiwyg"
+              initialValue={diary ? diary.diary_content : ''} // 다이어리 내용이 없을 경우 빈 문자열
+              ref={editorRef}
+              onChange={onChangeGetHTML}
+              addImageBlobHook={addImageBlobHook}
+              hideModeSwitch={true}
+            />
+          ) : (
+            <Viewer
+              initialValue={`<div style="padding: 20px; font-size: large;">${diary ? diary.diary_content : ''}</div>`} // 다이어리 데이터가 있을 때 Viewer로 내용만 표시
+            />
+          )}
+        </div>
+>>>>>>> ffb64202dc9dd78ff8c1120fb1c75324fca0057b
       </div>
     </div>
   );
