@@ -28,8 +28,8 @@ const Follow = () => {
     // 서버로부터 데이터를 가져오는 함수
     const fetchFollowData = async () => {
         try {
-            const followerResponse = await axios.get('/followers'); // 서버의 팔로워 데이터 엔드포인트
-            const followingResponse = await axios.get('/followings'); // 서버의 팔로잉 데이터 엔드포인트
+            const followerResponse = await axios.get(`https://api.usdiary.site/friends/{sign_id}followers`); // 서버의 팔로워 데이터 엔드포인트
+            const followingResponse = await axios.get(`https://api.usdiary.site/friends/{sign_id}followings`); // 서버의 팔로잉 데이터 엔드포인트
 
             setFollowers(followerResponse.data); // 서버에서 받은 팔로워 데이터 저장
             setFollowings(followingResponse.data); // 서버에서 받은 팔로잉 데이터 저장

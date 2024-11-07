@@ -56,7 +56,7 @@ const NotificationDetail = () => {
     return (
         <div className='wrap'>
             <Menu />
-            <div className='notification'>
+            <div className='profile'>
                 <ProfileMenu />
                 <div className='notification-contents'>
                     <h2 className='notification-title'>{notification.title}</h2>

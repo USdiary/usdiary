@@ -45,10 +45,10 @@ const Notification = () => {
     return (
         <div className='wrap'>
             <Menu />
-            <div className='notification'>
+            <div className='profile'>
                 <ProfileMenu />
                 <div className='notification-contents'>
-                    <h2>공지사항</h2>
+                    <div className='notification-contents-title'>공지사항</div>
                     {error && <p className='error-message'>{error}</p>} {/* 에러 메시지 표시 */}
                     <div className='notification-list'>
                         <div className='notification-header'>

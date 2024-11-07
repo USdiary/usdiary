@@ -40,7 +40,7 @@ const MoonerPopup = ({ follower, onClose }) => {
     
     const updateRelationship = async (newRelationshipStatus) => {
         try {
-            await axios.post('https://localhost:3001/mypage/follow', {
+            await axios.post(`https://api.usdiary.site/friends/follow-request`, {
                 requested_sign_id: follower.User,
             });
             setRelationship(newRelationshipStatus);
@@ -54,7 +54,7 @@ const MoonerPopup = ({ follower, onClose }) => {
         // 서버에서 다이어리 데이터와 핀의 개수를 가져오는 함수
         const fetchDiaries = async () => {
             try {
-                const response = await fetch('/api/diaries'); // 서버 API 경로
+                const response = await fetch(`https://api.usdiary.site/friends/search/nickname`); // 서버 API 경로
                 const data = await response.json();
                 setDiaries(data.diaries); // 서버에서 받은 다이어리 데이터
                 setPinCount(data.pinCount); // 서버에서 받은 핀의 개수
@@ -87,7 +87,7 @@ const MoonerPopup = ({ follower, onClose }) => {
                             {pinCount === 0 ? (
                                 <p>고정된 일기가 없습니다</p> // 핀의 개수가 0일 때 표시
                             ) : (
-                                diaries.slice(0, pinCount).map((diary) => (
+                                (diaries && diaries.length > 0 ? diaries : []).slice(0, pinCount).map((diary) => (
                                     <DiaryCard
                                         key={diary.diary_id}
                                         diary_title={diary.diary_title}

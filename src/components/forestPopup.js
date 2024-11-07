@@ -7,6 +7,7 @@ import ReportPopup from './reportPopup';
 import { jwtDecode } from 'jwt-decode';
 import { Viewer } from '@toast-ui/react-editor';
 import defaultImage from '../assets/images/default.png';
+import MoonerPopup from '../pages/mypage/follow/moonerPopup';
 
 const ForestPopup = ({ diary_id, onClose }) => {
     const [diary, setDiary] = useState(null);
@@ -22,32 +23,34 @@ const ForestPopup = ({ diary_id, onClose }) => {
     const [likedCount, setLikedCount] = useState(0);
     const [userProfile, setUserProfile] = useState({ user_nick: '', profile_img: '' });
     const [diaryLoading, setDiaryLoading] = useState(true);
+    const [isMoonerPopupOpen, setIsMoonerPopupOpen] = useState(false);
 
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        
+
         if (!token) {
             console.warn("No token found in localStorage.");
             return;
         }
-    
+
         const decoded = jwtDecode(token);
         const user_id = decoded.user_id; // Extract user_id from token
-    
+
         const fetchUserProfile = async () => {
             try {
                 const response = await axios.get(`https://api.usdiary.site/mypages/profiles/${user_id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-    
+
                 // Check if the data exists in response
                 if (response.data && response.data.data) {
-                    const { user_nick, profile_img } = response.data.data;
-    
+                    const { user_nick, profile_img, user_tendency } = response.data.data;
+
                     setUserProfile({
                         user_nick: user_nick || 'Unknown User',
                         profile_img: profile_img || 'defaultProfileImg.jpg', // Fallback profile image if none exists
+                        user_tendency: user_tendency
                     });
                 } else {
                     console.error("User profile data is missing in response:", response);
@@ -56,10 +59,10 @@ const ForestPopup = ({ diary_id, onClose }) => {
                 console.error('Error fetching user profile:', error);
             }
         };
-    
+
         fetchUserProfile();
     }, []);
-    
+
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -150,7 +153,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
         if (questionData.answer_id) {
             fetchAnswerData(questionData.answer_id);
         } else {
-            setAnswerData([]); 
+            setAnswerData([]);
         }
     }, [questionData]);
 
@@ -160,7 +163,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
         // userProfile.user_nick이 설정된 이후에만 comments를 가져옴
         if (userProfile.user_nick) {
             const token = localStorage.getItem('token');
-    
+
             const fetchComments = async () => {
                 try {
                     const response = await axios.get(`https://api.usdiary.site/diaries/${diary_id}/comments`, {
@@ -169,7 +172,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                     const commentsData = response.data?.data || [];
                     setComments(commentsData);
                     console.log('Comments Data:', commentsData);
-    
+
                 } catch (error) {
                     const message = error.code === 'ECONNABORTED'
                         ? '서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.'
@@ -180,7 +183,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                     setLoading(false);
                 }
             };
-    
+
             fetchComments();
         }
     }, [userProfile.user_nick, diary_id]);
@@ -237,7 +240,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                             },
                         },
                     };
-    
+
                     setComments(prevComments => [...prevComments, newCommentWithUser]);
                     setNewComment("");
                     console.log(response.data.message); // 댓글 생성 성공 메시지 로그
@@ -283,21 +286,21 @@ const ForestPopup = ({ diary_id, onClose }) => {
 
     const handleEditBlur = async (comment_id) => {
         console.log("diary_id:", diary_id, "comment_id:", comment_id);
-    
+
         const commentEl = commentRefs.current[comment_id];
-        
+
         if (commentEl) {
             const updatedContent = commentEl.innerText;
-    
+
             try {
                 const token = localStorage.getItem('token');
-    
+
                 // JWT에서 sign_id를 추출
                 const decodedToken = jwtDecode(token);
                 const loggedInSignId = decodedToken?.sign_id;
-    
+
                 console.log("Logged in sign_id:", loggedInSignId); // sign_id가 올바르게 추출되었는지 확인
-    
+
                 // 현재 댓글의 작성자와 로그인한 사용자 비교
                 const comment = comments.find(comment => comment.comment_id === comment_id);
                 if (!comment || comment.sign_id !== loggedInSignId) {
@@ -305,7 +308,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
                     setError("You do not have permission to edit this comment.");
                     return;
                 }
-    
+
                 const response = await axios.put(
                     `https://api.usdiary.site/diaries/${diary_id}/comments/${comment_id}`,
                     { content: updatedContent },
@@ -316,9 +319,9 @@ const ForestPopup = ({ diary_id, onClose }) => {
                         },
                     }
                 );
-    
+
                 console.log('Response:', response.data);
-    
+
                 // Update comments in the state with the edited comment content
                 setComments(comments.map(comment =>
                     comment.comment_id === comment_id
@@ -330,10 +333,10 @@ const ForestPopup = ({ diary_id, onClose }) => {
                 console.error('Error updating comment:', err.response?.data || err.message);
             }
         }
-    
+
         setEditingcomment_id(null); // Exit edit mode
     };
-    
+
 
     const handleDeleteClick = async (comment_id) => {
         try {
@@ -371,7 +374,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
 
     const hasComments = comments.length > 0;
     const hasAnswers = answerData && answerData.length > 0;
-    
+
 
     const EmptyHeart = () => (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -385,22 +388,42 @@ const ForestPopup = ({ diary_id, onClose }) => {
         </svg>
     );
 
+    // MoonerPopup 열기 핸들러
+    const handleOpenMoonerPopup = () => {
+        setIsMoonerPopupOpen(true);
+    };
+
+    // MoonerPopup 닫기 핸들러
+    const handleCloseMoonerPopup = () => {
+        setIsMoonerPopupOpen(false);
+    };
+
+    // follower 데이터 구성
+    const follower = {
+        friend_profile_img: diary?.User?.Profile?.profile_img || defaultImage,
+        friend_nick: diary?.User?.user_nick,
+        user_tendency: diary?.User?.tendency
+    };
+
     return (
         <div>
             <div className="forest-popup" onClick={handleBackgroundClick}>
                 <div className="forest-popup__content">
                     <div className='forest-popup__header'>
-                        <div className='forest-popup__header-left'>
+                        <div className='forest-popup__header-left' onClick={handleOpenMoonerPopup}>
                             <img src={diary?.User?.Profile?.profile_img || defaultImage} alt={`${diary?.User?.user_nick || 'User'}'s profile`} className="forest-popup__author-profile-image" />
                             <p className="forest-popup__author-nickname">{diary?.User?.user_nick || 'User'}님</p>
                         </div>
+                        {isMoonerPopupOpen && (
+                            <MoonerPopup follower={follower} onClose={handleCloseMoonerPopup} />
+                        )}
                         <div className="forest-popup__header-right">
                             <button className="forest-popup__report-button" onClick={handleReportButtonClick}>
                                 <img src={sirenIcon} alt="Report icon" />
                             </button>
                             <div className="forest-popup__like-button">
                                 {liked ? <FilledHeart /> : <EmptyHeart />}
-                                
+
                             </div>
                             <div className="forest-popup__like-count">{likedCount}</div>
                         </div>
