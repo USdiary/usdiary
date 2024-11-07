@@ -17,42 +17,70 @@ const MyRate = () => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [diaryCards, setDiaryCards] = useState([]);
     const [user, setUser] = useState(null);
-    const [data, setData] = useState({});
     const [statistics, setStatistics] = useState({ forest: 0, city: 0, sea: 0 });
     const navigate = useNavigate();
 
     useEffect(() => {
-        const token = localStorage.getItem('token'); // 로컬 스토리지에서 토큰 가져오기
-        let user_id = null;
-    
-        if (token) {
-            try {
-                const userDataFromToken = jwtDecode(token);
-                user_id = userDataFromToken.user_id; 
-                console.log(user_id);
-                setUser(userDataFromToken);
-            } catch (error) {
-                console.error('JWT 디코딩 오류:', error);
-            }
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            console.log('토큰이 없습니다. 로그인 필요');
+            return;
         }
-    
-        if (user_id) {
-            // 사용자 프로필 정보 가져오기
-            const fetchUserProfile = async () => {
-                try {
-                    const response = await axios.get(`/mypage/profiles/${user_id}`);
-                // data 상태를 업데이트
-                setData(response.data.data);  
-                setUser(response.user);
-                console.log('User Profile:', response.data.data);  // 받아온 데이터 확인
-            } catch (error) {
-                console.error('사용자 프로필 정보를 가져오는 중 오류 발생:', error);
-            }
-            };
-    
-            fetchUserProfile(); // 사용자 프로필 정보 가져오기 호출
+
+        try {
+            const userDataFromToken = jwtDecode(token);
+            setUser(userDataFromToken);
+            console.log('Decoded user data:', userDataFromToken);
+        } catch (error) {
+            console.error('JWT 디코딩 오류:', error);
         }
     }, []);
+
+    const [userProfile, setUserProfile] = useState({
+        profile_img: '',
+        user_nick: '',
+        user_tendency: ''
+    });
+    console.log('profile data:', userProfile);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            console.warn("No token found in localStorage.");
+            return;
+        }
+
+        const decoded = jwtDecode(token);
+        const user_id = decoded.user_id; // Extract user_id from token
+
+        const fetchUserProfile = async () => {
+            try {
+                const response = await axios.get(`https://api.usdiary.site/mypages/profiles/${user_id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                // Check if the data exists in response
+                if (response.data && response.data.data) {
+                    const { user_nick, profile_img, user_tendency } = response.data.data;
+
+                    setUserProfile({
+                        user_nick: user_nick || 'Unknown User',
+                        profile_img: profile_img || 'defaultProfileImg.jpg', // Fallback profile image if none exists
+                        user_tendency: user_tendency || '숲'
+                    });
+                } else {
+                    console.error("User profile data is missing in response:", response);
+                }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+            }
+        };
+
+        fetchUserProfile();
+    }, []);
+    
 
     useEffect(() => {
         if (user) {
@@ -65,40 +93,42 @@ const MyRate = () => {
         let allDiaries = [];
         let promises = [];
         const maxPages = 5; // 한번에 가져올 최대 페이지 수
-    
+
         try {
             // 페이지를 병렬로 요청하여 데이터를 빠르게 가져오기
             for (let page = 1; page <= maxPages; page++) {
                 promises.push(axios.get(`https://api.usdiary.site/diaries?user_id=${user_id}&year=${year}&month=${month}&page=${page}`));
             }
-    
+
             const responses = await Promise.all(promises);
-    
+
             responses.forEach(response => {
                 const diaryData = response.data.data.diary;
                 if (Array.isArray(diaryData) && diaryData.length > 0) {
                     allDiaries = allDiaries.concat(diaryData);
                 }
             });
-    
+
+            const filteredDiaries = allDiaries.filter(diary => diary.user_id === user_id);
+
             // 필터링 및 상태 업데이트
-            const filteredDiaries = allDiaries.filter(diary => {
+            const finalFilteredDiaries = filteredDiaries.filter(diary => {
                 const diaryDate = new Date(diary.createdAt);
                 return (
                     diaryDate.getFullYear() === year &&
                     diaryDate.getMonth() + 1 === month
                 );
             });
-    
-            console.log(filteredDiaries);
-            setDiaryCards(filteredDiaries);
+
+            console.log(finalFilteredDiaries);
+            setDiaryCards(finalFilteredDiaries);
         } catch (error) {
             console.error('일기를 가져오는 중 오류 발생:', error);
             setDiaryCards([]);
             setStatistics({ forest: 0, city: 0, sea: 0 });
         }
     };
-    
+
 
     if (!user) {
         return <div>Loading...</div>;
@@ -192,6 +222,7 @@ const MyRate = () => {
         setSelectedDate(nextDate);
         updateSelectedDiary(nextDate);
     };
+    
 
     return (
         <div className='wrap'>
@@ -204,9 +235,9 @@ const MyRate = () => {
                             <>
                                 <img src={user.Profile ? user.Profile.profile_img : defaultImage} alt='Profile' className='profile-image' />
                                 <div className='profile-summary'>
-                                <h3 className='profile-tendency'>{data.user_nick}님은 {statistics[data.user_tendency]}% {data.user_tendency} 성향이에요</h3>
+                                    <h3 className='profile-tendency'>{userProfile.user_nick}님은 {userProfile.user_tendency} 성향이에요</h3>
                                     <div className='progress-bar'>
-                                        <div className='progress-bar-fill' style={{ width: `${statistics[data.user_tendency]}%` }}></div>
+                                        <div className='progress-bar-fill' style={{ width: `${statistics[userProfile.user_tendency]}%` }}></div>
                                     </div>
                                 </div>
                             </>
