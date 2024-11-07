@@ -17,23 +17,40 @@ const MyRate = () => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [diaryCards, setDiaryCards] = useState([]);
     const [user, setUser] = useState(null);
+    const [data, setData] = useState({});
     const [statistics, setStatistics] = useState({ forest: 0, city: 0, sea: 0 });
     const navigate = useNavigate();
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-
-        if (!token) {
-            console.log('토큰이 없습니다. 로그인 필요');
-            return;
+        const token = localStorage.getItem('token'); // 로컬 스토리지에서 토큰 가져오기
+        let user_id = null;
+    
+        if (token) {
+            try {
+                const userDataFromToken = jwtDecode(token);
+                user_id = userDataFromToken.user_id; 
+                console.log(user_id);
+                setUser(userDataFromToken);
+            } catch (error) {
+                console.error('JWT 디코딩 오류:', error);
+            }
         }
-
-        try {
-            const userDataFromToken = jwtDecode(token);
-            setUser(userDataFromToken);
-            console.log('Decoded user data:', userDataFromToken);
-        } catch (error) {
-            console.error('JWT 디코딩 오류:', error);
+    
+        if (user_id) {
+            // 사용자 프로필 정보 가져오기
+            const fetchUserProfile = async () => {
+                try {
+                    const response = await axios.get(`/mypage/profiles/${user_id}`);
+                // data 상태를 업데이트
+                setData(response.data.data);  
+                setUser(response.user);
+                console.log('User Profile:', response.data.data);  // 받아온 데이터 확인
+            } catch (error) {
+                console.error('사용자 프로필 정보를 가져오는 중 오류 발생:', error);
+            }
+            };
+    
+            fetchUserProfile(); // 사용자 프로필 정보 가져오기 호출
         }
     }, []);
 
@@ -187,9 +204,9 @@ const MyRate = () => {
                             <>
                                 <img src={user.Profile ? user.Profile.profile_img : defaultImage} alt='Profile' className='profile-image' />
                                 <div className='profile-summary'>
-                                <h3 className='profile-tendency'>{user.user_nick}님은 {statistics[user.user_tendency]}% {user.user_tendency} 성향이에요</h3>
+                                <h3 className='profile-tendency'>{data.user_nick}님은 {statistics[data.user_tendency]}% {data.user_tendency} 성향이에요</h3>
                                     <div className='progress-bar'>
-                                        <div className='progress-bar-fill' style={{ width: `${statistics[user.user_tendency]}%` }}></div>
+                                        <div className='progress-bar-fill' style={{ width: `${statistics[data.user_tendency]}%` }}></div>
                                     </div>
                                 </div>
                             </>
