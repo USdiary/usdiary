@@ -342,7 +342,6 @@ const ForestPopup = ({ diary_id, onClose }) => {
 
             const response = await axios.delete(`https://api.usdiary.site/diaries/${diary_id}/comments/${comment_id}`, {
                 headers: { Authorization: `Bearer ${token}` }, // 토큰 헤더에 추가
-
             });
 
             // 상태 코드가 200일 때만 댓글 목록에서 삭제
