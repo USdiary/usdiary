@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Viewer, Editor } from '@toast-ui/react-editor';
 import '@toast-ui/editor/dist/toastui-editor.css';
 import axios from 'axios';
+import imageCompression from 'browser-image-compression';
 
 import tree from '../assets/images/tree.png';
 import DateSelector from './dateSelector';
@@ -55,6 +56,18 @@ const ForestComponent = () => {
     }
   }, [diary]);
 
+  const handleImageUpload = async (file, callback) => {
+    try {
+      const compressedFile = await imageCompression(file, { maxSizeMB: 0.5, maxWidthOrHeight: 800 });
+      const reader = new FileReader();
+      reader.onloadend = () => callback(reader.result);
+      reader.readAsDataURL(compressedFile);
+    } catch (error) {
+      console.error("Image upload failed:", error);
+    }
+  };
+  
+
   const handleDateClick = (date) => {
     const today = new Date();
     const yesterday = new Date();
@@ -77,6 +90,13 @@ const ForestComponent = () => {
       setFirstImageUrl(firstImageUrl);
     }
   };
+
+  const extractFirstImageUrl = (content) => {
+    const doc = new DOMParser().parseFromString(content, "text/html");
+    const img = doc.querySelector("img");
+    return img ? img.src : null;
+  };
+  
 
   const addImageBlobHook = async (blob, callback) => {
     try {
@@ -179,7 +199,7 @@ const ForestComponent = () => {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(diaryData),
+        body: formData
       });
 
       if (!response.ok) {
@@ -188,6 +208,7 @@ const ForestComponent = () => {
 
       console.log('저장 완료:', await response.json());
       setIsEditing(false);
+      navigate('/forest');
     } catch (error) {
       console.error("Error submitting diary:", error);
     }
