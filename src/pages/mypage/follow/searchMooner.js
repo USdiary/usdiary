@@ -7,47 +7,57 @@ import search from '../../../assets/images/search.png';
 
 const SearchMooner = ({ onClose }) => {
     const [searchText, setSearchText] = useState('');
-    const [entireUsers, setEntireUsers] = useState([]);
+    const [entireUsers, setEntireUsers] = useState([]); // 검색된 유저 저장용
 
     const handleInputChange = (event) => {
         setSearchText(event.target.value);
     };
 
-    // 서버에서 데이터를 받아오는 부분
-    useEffect(() => {
-        axios.get(`https://api.usdiary.site/friends/search?user_nick=${searchText}`)
-            .then((response) => {
-                setEntireUsers(response.data);
-            })
-            .catch((error) => {
-                console.error('Error fetching followings:', error);
-            });
-    }, []);
+    // 검색 API 호출 함수
+    const fetchUsers = async () => {
+        if (searchText.trim() === '') return;
+        try {
+            const response = await axios.get(`https://api.usdiary.site/friends/search?user_nick=${searchText}`);
+            setEntireUsers(response.data);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    };
 
-    // 검색어에 따라 entireUsers를 필터링
-    const filteredUsers = entireUsers.filter(user => 
-        user.nickname.includes(searchText)
-    );
+    const handleKeyDown = (event) => {
+        if (event.key === 'Enter') {
+            fetchUsers();
+        }
+    };
+
+    const handleSearchClick = () => {
+        fetchUsers();
+    };
 
     return (
         <div className="mooner_popup-overlay">
             <div className="mooner_popup-content">
-                <img src={exit} className="mooner_popup_close" alt="Close popup" onClick={onClose}/>
+                <img src={exit} className="mooner_popup_close" alt="Close popup" onClick={onClose} />
                 <div className='mooner_popup_name'>닉네임으로 무너 찾기</div>
                 <div className='mooner_popup_search-id'>
-                    <img src={search} alt="Search icon" />
                     <input 
                         type="text" 
                         value={searchText}
                         onChange={handleInputChange}
+                        onKeyDown={handleKeyDown} 
                         placeholder="닉네임 검색"
                         className='mooner_popup_search-id_input'
                     />
+                    <img 
+                        src={search} 
+                        alt="Search icon" 
+                        onClick={handleSearchClick}
+                    />
                 </div>
                 <div className='mooner_popup_box'>
-                    {filteredUsers.map((user, index) => (
+                    {entireUsers.map((user, index) => (
                         <div key={index} className='profile-follow_box_content_box_friend'>
-                            <img src={user.image} className='profile-follow_box_content_box_friend_img' alt='profile'/>
+                            <img src={user.image} className='profile-follow_box_content_box_friend_img' alt='profile' />
                             <div className='profile-follow_box_content_box_friend_text'>
                                 <div className='profile-follow_box_content_box_friend_text_nickname'>{user.nickname}</div>
                                 <div className='profile-follow_box_content_box_friend_text_id'>{user.id}</div>
