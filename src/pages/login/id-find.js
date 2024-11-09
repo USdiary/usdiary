@@ -28,7 +28,7 @@ const FindId = () => {
         const formattedBirthdate = formatDate(birthdate);
 
         try {
-            const response = await axios.post('/users/findID', {
+            const response = await axios.post('https://api.usdiary.site/users/findID', {
                 user_name: name,
                 user_email: email,
                 user_birthday: formattedBirthdate

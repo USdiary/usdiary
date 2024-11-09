@@ -86,27 +86,26 @@ const ForestPopup = ({ diary_id, onClose }) => {
         fetchDiaryData();
     }, [diary_id]);
 
-    // useEffect(() => {
-    //     const token = localStorage.getItem('token');
-    //     const fetchQuestionData = async () => {
-    //         try {
-    //             const response = await axios.get('https://api.usdiary.site/contents/questions/today', {
-    //                 headers: token ? { Authorization: `Bearer ${token}` } : {},
-    //                 timeout: 10000,
-    //             });
-    //             const data = response.data?.data;
-    //             setQuestionData(data || null);
-    //             console.log('Question Data:', data);
-    //         } catch (error) {
-    //             const message = error.code === 'ECONNABORTED'
-    //                 ? '서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.'
-    //                 : '오늘의 질문을 불러오는 데 실패했습니다.';
-    //             setError(message);
-    //             console.error("Error fetching today's question:", error);
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
+    /* useEffect(() => {
+        const token = localStorage.getItem('token');
+        const fetchQuestionData = async () => {
+            try {
+                const response = await axios.get('https://api.usdiary.site/contents/questions/today', {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                });
+                const data = response.data?.data;
+                setQuestionData(data || null);
+                console.log('Question Data:', data);
+            } catch (error) {
+                const message = error.code === 'ECONNABORTED'
+                    ? '서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.'
+                    : '오늘의 질문을 불러오는 데 실패했습니다.';
+                setError(message);
+                console.error("Error fetching today's question:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
     //     fetchQuestionData();
     // }, [diary_id]);
@@ -153,7 +152,7 @@ const ForestPopup = ({ diary_id, onClose }) => {
         } else {
             setAnswerData([]); 
         }
-    }, [questionData]);
+    }, [questionData]); */
 
 
     // Comments data fetch
@@ -241,9 +240,9 @@ const ForestPopup = ({ diary_id, onClose }) => {
     
                     setComments(prevComments => [...prevComments, newCommentWithUser]);
                     setNewComment("");
+                    setError(null);
                     console.log(response.data.message); // 댓글 생성 성공 메시지 로그
                 } else {
-                    setError('Failed to submit comment');
                     console.error('Unexpected response status:', response.status);
                 }
             } catch (err) {
@@ -251,16 +250,18 @@ const ForestPopup = ({ diary_id, onClose }) => {
                     if (err.response.status === 419) {
                         setError('Token has expired');
                     } else if (err.response.status === 404) {
-                        setError(err.response.data.message);
+                        setError(err.response.data.message);  // 서버에서 보내는 오류 메시지
                     } else {
+                        // 서버 오류 메시지가 없을 때 기본 메시지
                         setError('Failed to submit comment');
                     }
-                    console.error('Server response error:', err.response.data);
-                } else {
-                    setError('Failed to submit comment');
-                    console.error('Error submitting comment:', err);
+                } else { 
+                    // err.response가 없으면 서버에 접근할 수 없는 경우이므로 네트워크 오류일 수 있음
+                    console.error('Network error or unexpected error:', err);
+                    setError('Failed to submit comment - Network or unexpected error');
                 }
             }
+            
         }
     };
 

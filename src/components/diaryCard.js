@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import '../assets/css/diaryCard.css';
 import axios from 'axios';
 import defaultImg from '../assets/images/default.png';
 
-const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nick, board_name, isFriendPage, diary_id, onClick }) => {
+const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nick, board_name, isFriendPage, diary_id, onClick, user_id }) => {
     const [liked, setLiked] = useState(false);
 
-    /*
     useEffect(() => {
         const fetchLikeStatus = async () => {
             try {
@@ -20,7 +19,7 @@ const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nic
             }
         };
         fetchLikeStatus();
-    }, [diary_id, user_id]); */
+    }, [diary_id, user_id]);
 
     const formatDate = (date) => {
         if (!date) return 'Invalid date';  // date가 없으면 기본 메시지 반환
@@ -59,7 +58,7 @@ const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nic
         </svg>
     );
 
-    const strippedContent = diary_content.replace(/<\/?[^>]+(>|$)/g, '');
+    const strippedContent = diary_content ? diary_content.replace(/<\/?[^>]+(>|$)/g, '') : '';
 
     const getBorderClass = () => {
         if (isFriendPage) return 'friend-border';
