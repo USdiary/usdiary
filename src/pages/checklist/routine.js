@@ -2,48 +2,50 @@ import React, { useState, useEffect } from 'react';
 import '../../assets/css/checklist.css';
 import right_arrow from '../../assets/images/right_arrow.png';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+import { PropTypes } from 'prop-types'
 
-// API 호출 함수들
-const getRoutines = async () => {
-  try {
-    const response = await axios.get('/routines');
-    return response.data;
-  } catch (error) {
-    console.error('Failed to fetch routines:', error);
-    throw error;
-  }
-};
-
-const postRoutines = async (routines) => {
-  try {
-    const response = await axios.post('/routines', { routines });
-    return response.data;
-  } catch (error) {
-    console.error('Failed to post routines:', error);
-    throw error;
-  }
-};
-
-const Routine = ({ onClose, onArrowClick, onSubmit }) => {
-  const [routines, setRoutines] = useState([]);
+const Routine = ({ onClose, onArrowClick, onSubmit}) => {
+  const [todo_id, setTodoId] = useState(null);
+  const [routine_id, setRoutineId] = useState(null);
+  const [routines, setRoutines] = useState([{ title: '', content: '', description: '', is_completed: false, toggle: false }]);
+  const [newRoutine, setNewRoutine] = useState({ description: '', is_completed: false });
+  const [signId, setSignId] = useState(null);  // State to store signId
 
   useEffect(() => {
+    // Assuming the JWT token is stored in localStorage
+    const token = localStorage.getItem('token'); // or sessionStorage.getItem('token')
+    
+    if (token) {
+      try {
+        // Decode the token and extract signId
+        const decodedToken = jwtDecode(token);
+        setSignId(decodedToken.signId);  // assuming 'signId' is in the decoded token payload
+      } catch (error) {
+        console.error('Error decoding token:', error);
+      }
+    }
+  }, []);
+
+  /* useEffect(() => {
+    // 루틴 조회
     const fetchRoutines = async () => {
       try {
-        const data = await getRoutines();
-        setRoutines(data);
+        const response = await axios.get(`/routines/${routine_id}`);
+        setRoutines(response.data); // 루틴 데이터 업데이트
       } catch (error) {
         console.error('루틴 데이터를 가져오는 데 실패했습니다:', error);
       }
     };
-  
+
     fetchRoutines();
-  }, []);
+  }, [routine_id]); */
 
   // 새로운 루틴 항목 추가 (3개까지만)
   const handleAddRoutine = () => {
     if (routines.length < 3) {
-      setRoutines([...routines, { title: '', content: '', toggle: false }]);
+      const updatedRoutines = [...routines, { description: '', is_completed: false }];
+      setRoutines(updatedRoutines);
     }
   };
 
@@ -54,6 +56,7 @@ const Routine = ({ onClose, onArrowClick, onSubmit }) => {
     );
     setRoutines(updatedRoutines);
   };
+  
 
   // 루틴 토글 상태 변경
   const handleToggleChange = (index) => {
@@ -71,17 +74,28 @@ const Routine = ({ onClose, onArrowClick, onSubmit }) => {
 
   // 저장버튼 클릭시 루틴 상태 저장
   const handleSave = async () => {
-    onSubmit(routines);
+    if (!signId) {
+      alert('signId is missing. Cannot save routines.');
+      return;
+    }
+
     try {
-      const response = await postRoutines(routines);
-      console.log('루틴이 서버에 저장되었습니다:', response);
-      onSubmit(routines); // 체크리스트에 해당 값 등재
+      for (const routine of routines) {
+        const routineData = {
+          sign_id: signId, // Use the decoded signId
+          description: routine.description,
+          is_completed: routine.is_completed,
+        };
+        await axios.post('/routines', routineData); // POST request to server
+      }
       alert('루틴이 성공적으로 저장되었습니다.');
+      onSubmit(routines);
     } catch (error) {
       console.error('루틴을 저장하는 데 실패했습니다:', error);
       alert('루틴을 저장하는 데 실패했습니다. 다시 시도해주세요.');
     }
   };
+  
 
   return (
     <div className="ck-popup-overlay">
@@ -97,49 +111,50 @@ const Routine = ({ onClose, onArrowClick, onSubmit }) => {
                 <div className="routine-top-title-circle"></div>
                 <div className="routine-top-title-name">Routine</div>
               </div>
-              <img 
-                src={right_arrow} 
-                className="routine-arrow" 
+              <img
+                src={right_arrow}
+                className="routine-arrow"
                 alt="right_arrow"
-                onClick={onArrowClick} 
+                onClick={onArrowClick}
               />
             </div>
-            <hr/>
+            <hr />
             <div className="routine-middle">
               {routines.map((routine, index) => (
                 <div className="routine-middle-box" key={index}>
                   <div className="routine-middle-box-1">
-                    <input 
-                      type="checkbox" 
-                      id={`toggle-${index}`} 
-                      hidden 
-                      checked={routine.toggle} 
-                      onChange={() => handleToggleChange(index)} 
-                    /> 
+                    <input
+                      type="checkbox"
+                      id={`toggle-${index}`}
+                      hidden
+                      checked={routine.toggle}
+                      onChange={() => handleToggleChange(index)}
+                    />
                     <label htmlFor={`toggle-${index}`} className="routine-middle-box-toggleSwitch">
                       <span className="routine-middle-box-toggleButton"></span>
                     </label>
                   </div>
                   <div className="routine-middle-box-2">
-                    <input 
-                      className="routine-middle-box-title" 
-                      type="text" 
+                    <input
+                      className="routine-middle-box-title"
+                      type="text"
                       placeholder="Routine"
-                      value={routine.title}
+                      value={routine.title || ""}
                       onChange={(e) => handleRoutineChange(index, 'title', e.target.value)}
                       spellCheck="false"
                     />
                   </div>
                   <div className="routine-middle-box-3">
-                    <input 
-                      className="routine-middle-box-content" 
-                      type="text" 
+                    <input
+                      className="routine-middle-box-content"
+                      type="text"
                       placeholder="내용을 입력하시오."
-                      value={routine.content}
-                      onChange={(e) => handleRoutineChange(index, 'content', e.target.value)}
+                      value={routine.description || ''}
+                      onChange={(e) => handleRoutineChange(index, 'description', e.target.value)}
+                      spellCheck="false"
                     />
                   </div>
-                  <div 
+                  <div
                     className="routine-middle-box-delete"
                     onClick={() => handleDeleteRoutine(index)}
                   >
@@ -159,6 +174,12 @@ const Routine = ({ onClose, onArrowClick, onSubmit }) => {
       </div>
     </div>
   );
+};
+
+Routine.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  onArrowClick: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
 };
 
 
