@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../../assets/css/profile.css';
 import Menu from '../../components/menu';
 import ProfileMenu from '../../components/profileMenu';
-import BasicProfile from '../../assets/images/basicprofileimg.png'; // 기본 프로필 이미지 import
+import BasicProfile from '../../assets/images/basicprofileimg.png'; 
 
 const base64UrlToBase64 = (base64Url) => {
   let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -53,7 +53,7 @@ const ProfilePage = () => {
       return;
     }
 
-    const response = await fetch('/users/check-password', {
+    const response = await fetch('https://api.usdiary.site/users/check-password', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -76,20 +76,19 @@ const ProfilePage = () => {
   return (
     <div className="pro_page">
       <Menu />
+
       <div className="pro_page-container">
         <ProfileMenu />
         <div className="pro_content-box">
           <div className="pro_profile-section">
-            <div className="pro_profile-image-space">
-              {/* 프로필 이미지와 닉네임 표시 */}
-              <img
-                src={userData.profile_img || BasicProfile} // 기본 프로필 이미지 사용
-                alt="Profile"
-                className="pro_profile-img"
-              />
-              <p className="pro_profile-username">{userData.user_nick}</p>
-            </div>
-            <div className="pro_additional-circle"></div>
+            <div className="pro_profile-image-space" 
+                 style={{
+                   backgroundImage: userData.profile_img ? `url(${userData.profile_img})` : `url(${BasicProfile})`,
+                   backgroundSize: 'cover',
+                   backgroundPosition: 'center',
+                 }}
+            ></div>
+            <p className="pro_profile-username">{userData.user_nick}</p>
             <div className="pro_password-container">
               <input
                 type="password"
@@ -98,13 +97,13 @@ const ProfilePage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              {errorMessage && <p className="pro_error-message">{errorMessage}</p>}
               <button className="pro_confirm-button" onClick={handleConfirm}>확인</button>
             </div>
+            {errorMessage && <p className="pro_error-message">{errorMessage}</p>}
           </div>
         </div>
       </div>
-    </div>
+      </div>
   );
 };
 

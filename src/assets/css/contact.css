@@ -91,15 +91,15 @@
     font-weight: bold;
     color: black;
     margin-bottom: 20px;
-    margin-left: 300px;
-    margin-top: -300px;
+    margin-left: 500px;
+    margin-top: -280px;
 }
 
 .contact-form {
     display: flex;
     flex-direction: column;
     width: 1000px;
-    margin-left: 300px;
+    margin-left: 500px;
     margin-top: 80px;
 }
 
@@ -123,8 +123,6 @@
     outline: none; 
     font-family: Arial, sans-serif; 
 }
-
-
 
 .input-field::placeholder,
 .textarea-field::placeholder {
@@ -154,3 +152,4 @@
 .submit-button:active {
     background-color: #7BBE7B; 
 }
+

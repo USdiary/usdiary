@@ -32,7 +32,7 @@ const Menu = () => {
             setActiveButton('diary');
         } else if (location.pathname === '/map') {
             setActiveButton('map');
-        } else if (location.pathname === '/profile' || location.pathname.includes('mypage')) {
+        } else if (location.pathname === '/profile' || location.pathname === '/profilefix' || location.pathname === '/contact' || location.pathname === '/notification' || location.pathname.includes('mypage')) {
             setActiveButton('profile');
         }
     }, [location.pathname]);

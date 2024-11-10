@@ -7,6 +7,7 @@ import '../../assets/css/forest.css';
 import Menu from "../../components/menu";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import defaultImg from "../../assets/images/default.png"
 
 const Forest = () => {
     const [diaries, setDiaries] = useState([]);
@@ -150,8 +151,8 @@ const Forest = () => {
                                 key={diary.diary_id}
                                 diary_title={diary.diary_title}  // title → diary_title
                                 createdAt={diary.createdAt}       // date → createdAt
-                                diary_content={diary.diary_content.substring(0, 20) + ' ...'}  // summary → diary_content
-                                post_photo={`${baseURL}/${diary.post_photo}`}    // imageUrl → post_photo
+                                diary_content={diary.diary_content}  // summary → diary_content
+                                post_photo={(Array.isArray(diary.post_photo) && diary.post_photo.length > 0) ? `${baseURL}/${diary.post_photo}` : defaultImg}
                                 board_name={diary.Board.board_name}     // boardName → board_name
                                 user_nick={diary.User.user_nick}        // nickname → user_nick
                                 like_count={diary.like_count}

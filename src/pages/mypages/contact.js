@@ -22,7 +22,7 @@ const Contact = () => {
         };
 
         try {
-            const response = await axios.post('/api/questions', requestBody, {
+            const response = await axios.post('https://api.usdiary.site/questions', requestBody, {
                 headers: {
                     'Content-Type': 'application/json',
                 },

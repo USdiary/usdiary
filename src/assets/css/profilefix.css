@@ -76,6 +76,9 @@
   color: #545F71;
 }
 
+.pro_page .profile-menu_content.active .profile-menu_content_name {
+  color: #ffffff; /* active 상태일 때 이름 색상 */
+}
 
 .fix_page-container {
   display: flex;
