@@ -52,7 +52,7 @@ const ForestQuestion = ({ onBack }) => {
   useEffect(() => {
     const fetchTodayQuestion = async () => {
       try {
-        const response = await axios.get('https://api.usdiary.site/questions/random');
+        const response = await axios.get('https://api.usdiary.site/contents/questions/today');
         setTodayQuestion(response.data.question);
         setQuestionId(response.data.id);
 
