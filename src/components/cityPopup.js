@@ -339,7 +339,7 @@ const CityPopup = ({ diary_id, onClose }) => {
         try {
             const token = localStorage.getItem('token'); // JWT 토큰 가져오기
 
-            const response = await axios.delete(`https://api.usdiary.site/diaries/comments/${comment_id}`, {
+            const response = await axios.delete(`https://api.usdiary.site/diaries/${diary_id}/comments/${comment_id}`, {
                 headers: { Authorization: `Bearer ${token}` }, // 토큰 헤더에 추가
 
             });

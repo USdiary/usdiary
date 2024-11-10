@@ -4,6 +4,9 @@ import miniseaImage from '../assets/images/minisea.png';
 import sirenIcon from '../assets/images/siren_sea.png';
 import ReportPopup from './reportPopup';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+import { Viewer } from '@toast-ui/react-editor';
+import defaultImage from '../assets/images/default.png';
 
 import seashell from '../assets/images/seashell.png';
 import umbrage from '../assets/images/umbrage.png';
@@ -51,55 +54,106 @@ const SeaPopup = ({ diary_id, onClose }) => {
     const [editingcomment_id, setEditingcomment_id] = useState(null);
     const commentRefs = useRef({});
     const [selectedIcon, setSelectedIcon] = useState(null);
-    const [currentUserProfile, setCurrentUserProfile] = useState({
-        profile_img: miniseaImage,
-        user_nick: 'CurrentUser'
+    const [diaryLoading, setDiaryLoading] = useState(true);
+    const [userProfile, setUserProfile] = useState({
+        profile_img: '',
+        user_nick: ''
     });
 
     const getIconClass = (cate_num) => {
         return `sea-popup__icon-${cate_num}`;
     };
 
-
-    // 더미 데이터 호출 함수
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            console.warn("No token found in localStorage.");
+            return;
+        }
+
+        const decoded = jwtDecode(token);
+        const user_id = decoded.user_id; // Extract user_id from token
+
+        const fetchUserProfile = async () => {
             try {
-                // 다이어리 데이터 가져오기
-                const diaryResponse = await axios.get(`/diaries/${diary_id}`);
-                const fetchedDiary = diaryResponse.data;
-                setDiary(fetchedDiary);
+                const response = await axios.get(`https://api.usdiary.site/mypages/profiles/${user_id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
 
-                const placeResponse = await axios.get(`/diaries/${diary_id}/today_place`);
-                const fetchedPlace = placeResponse.data;
-                setTodayPlace(fetchedPlace);
-                setSelectedIcon(iconMap[fetchedPlace.cate_num]);
+                // Check if the data exists in response
+                if (response.data && response.data.data) {
+                    const { user_nick, profile_img } = response.data.data;
 
-                // 댓글 데이터 가져오기
-                const commentsResponse = await axios.get(`/diaries/${diary_id}/comments`);
-                setComments(commentsResponse.data);
-
-                // 사용자 프로필 가져오기
-                const userProfileResponse = await axios.get('/user/profile');
-                setCurrentUserProfile(userProfileResponse.data);
-            } catch (err) {
-                setError('Failed to load data');
-                console.error(err);
+                    setUserProfile({
+                        user_nick: user_nick || 'Unknown User',
+                        profile_img: profile_img || 'defaultProfileImg.jpg', // Fallback profile image if none exists
+                    });
+                } else {
+                    console.error("User profile data is missing in response:", response);
+                }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
             }
-            setLoading(false);
         };
 
-        fetchData();
+        fetchUserProfile();
+    }, []);
 
-        // 팝업이 뜨면 배경 스크롤 방지
-        document.body.style.overflow = 'hidden';
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const fetchDiaryData = async () => {
+            setDiaryLoading(true);
+            try {
+                const response = await axios.get(`https://api.usdiary.site/diaries/${diary_id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
 
-        // 팝업이 닫히면 배경 스크롤 복원
-        return () => {
-            document.body.style.overflow = '';
+                setDiary(response.data.data.diary);
+                console.log('Diary Data:', response.data.data);
+            } catch (error) {
+                const message = error.response?.status === 404
+                    ? '일기를 찾을 수 없습니다.'
+                    : '일기 데이터를 불러오는 데 실패했습니다.';
+                setError(message);
+                console.error('Error fetching diary data:', error.response?.data || error.message);
+            } finally {
+                setDiaryLoading(false);
+            }
         };
+
+        fetchDiaryData();
     }, [diary_id]);
+
+    useEffect(() => {
+        // userProfile.user_nick이 설정된 이후에만 comments를 가져옴
+        if (userProfile.user_nick) {
+            const token = localStorage.getItem('token');
+
+            const fetchComments = async () => {
+                try {
+                    const response = await axios.get(`https://api.usdiary.site/diaries/${diary_id}/comments`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    const commentsData = response.data?.data || [];
+                    setComments(commentsData);
+                    console.log('Comments Data:', commentsData);
+
+                } catch (error) {
+                    const message = error.code === 'ECONNABORTED'
+                        ? '서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.'
+                        : '댓글을 불러오는 데 실패했습니다.';
+                    setError(message);
+                    console.error('Error fetching comments:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            fetchComments();
+        }
+    }, [userProfile.user_nick, diary_id]);
+
 
     const [reportPopupVisible, setReportPopupVisible] = useState(false);
 
@@ -113,6 +167,7 @@ const SeaPopup = ({ diary_id, onClose }) => {
 
     if (loading) return <div className="sea-popup">Loading...</div>;
     if (error) return <div className="sea-popup">{error}</div>;
+    if (diaryLoading) return <div className="diary-popup">Loading...</div>;
 
     const handleBackgroundClick = (e) => {
         if (e.target === e.currentTarget) {
@@ -127,21 +182,57 @@ const SeaPopup = ({ diary_id, onClose }) => {
     const handleCommentSubmit = async () => {
         if (newComment.trim()) {
             const newCommentData = {
-                user_nick: currentUserProfile.user_nick,
-                comment_text: newComment,
-                diary_id: diary_id,
+                content: newComment, // 서버가 기대하는 필드명에 맞춤
             };
 
             try {
-                const response = await axios.post(`/comments/${diary_id}/comments`, newCommentData);
-                const createdComment = response.data;
-                setComments((prevComments) => [...prevComments, createdComment]);
-                setNewComment("");
+                const token = localStorage.getItem('token'); // JWT 토큰 가져오기
+
+                // 서버에 댓글 요청
+                const response = await axios.post(`https://api.usdiary.site/diaries/${diary_id}/comments`, newCommentData, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                // 상태 코드가 201일 때만 댓글 목록에 추가
+                if (response.status === 201) {
+                    const newCommentWithUser = {
+                        ...response.data.data.comment,
+                        User: {
+                            user_nick: userProfile?.user_nick,
+                            Profile: {
+                                profile_img: userProfile?.profile_img,
+                            },
+                        },
+                    };
+
+                    setComments(prevComments => [...prevComments, newCommentWithUser]);
+                    setNewComment("");
+                    console.log(response.data.message); // 댓글 생성 성공 메시지 로그
+                } else {
+                    setError('Failed to submit comment');
+                    console.error('Unexpected response status:', response.status);
+                }
             } catch (err) {
-                setError(err.message);
+                if (err.response) {
+                    if (err.response.status === 419) {
+                        setError('Token has expired');
+                    } else if (err.response.status === 404) {
+                        setError(err.response.data.message);
+                    } else {
+                        setError('Failed to submit comment');
+                    }
+                    console.error('Server response error:', err.response.data);
+                } else {
+                    setError('Failed to submit comment');
+                    console.error('Error submitting comment:', err);
+                }
             }
         }
     };
+
 
 
     const handleEditClick = (comment_id) => {
@@ -149,48 +240,90 @@ const SeaPopup = ({ diary_id, onClose }) => {
     };
 
     const handleEditBlur = async (comment_id) => {
+        console.log("diary_id:", diary_id, "comment_id:", comment_id);
+
         const commentEl = commentRefs.current[comment_id];
+
         if (commentEl) {
-            const updatedComment = {
-                ...comments.find(comment => comment.comment_id === comment_id),
-                comment_text: commentEl.innerText,
-            };
+            const updatedContent = commentEl.innerText;
 
             try {
-                const response = await axios.put(`/comments/${diary_id}/comments/${comment_id}`, updatedComment);
-    
-                if (response.status === 200) {
-                    setComments(comments.map(comment =>
-                        comment.comment_id === comment_id ? updatedComment : comment
-                    ));
-                } else {
-                    throw new Error('Failed to update comment');
+                const token = localStorage.getItem('token');
+
+                // JWT에서 sign_id를 추출
+                const decodedToken = jwtDecode(token);
+                const loggedInSignId = decodedToken?.sign_id;
+
+                console.log("Logged in sign_id:", loggedInSignId); // sign_id가 올바르게 추출되었는지 확인
+
+                // 현재 댓글의 작성자와 로그인한 사용자 비교
+                const comment = comments.find(comment => comment.comment_id === comment_id);
+                if (!comment || comment.sign_id !== loggedInSignId) {
+                    console.log("You do not have permission to edit this comment.");
+                    setError("You do not have permission to edit this comment.");
+                    return;
                 }
+
+                const response = await axios.put(
+                    `https://api.usdiary.site/diaries/${diary_id}/comments/${comment_id}`,
+                    { content: updatedContent },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+
+                console.log('Response:', response.data);
+
+                // Update comments in the state with the edited comment content
+                setComments(comments.map(comment =>
+                    comment.comment_id === comment_id
+                        ? { ...comment, content: updatedContent }
+                        : comment
+                ));
             } catch (err) {
-                setError(err.message);
+                setError('Failed to update comment');
+                console.error('Error updating comment:', err.response?.data || err.message);
             }
         }
-        setEditingcomment_id(null);
+
+        setEditingcomment_id(null); // Exit edit mode
     };
 
     const handleDeleteClick = async (comment_id) => {
         try {
-            const response = await fetch(`/comments/${comment_id}`, {
-                method: 'DELETE',
+            const token = localStorage.getItem('token'); // JWT 토큰 가져오기
+
+            const response = await axios.delete(`https://api.usdiary.site/diaries/${diary_id}/comments/${comment_id}`, {
+                headers: { Authorization: `Bearer ${token}` }, // 토큰 헤더에 추가
+
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to delete comment');
+            // 상태 코드가 200일 때만 댓글 목록에서 삭제
+            if (response.status === 200) {
+                setComments(prevComments => prevComments.filter(comment => comment.comment_id !== comment_id));
+                console.log('Comment deleted successfully:', response.data.message);
+                return;
             }
 
-            setComments(comments.filter(comment => comment.comment_id !== comment_id));
+            // 상태 코드가 404일 경우
+            if (response.status === 404) {
+                setError('Comment not found');
+                console.error('Comment not found:', response.data.message);
+                return;
+            }
+
+            // 예상치 못한 상태 코드
+            setError('Failed to delete comment');
+            console.error('Unexpected response status:', response.status);
+
         } catch (err) {
-            setError(err.message);
+            setError('Failed to delete comment');
+            console.error('Error deleting comment:', err.response?.data.message || err.message);
         }
     };
-
-    const hasComments = comments.length > 0;
-    const showPlaceSection = todayPlace?.cate_num !== undefined && todayPlace?.cate_num !== null;
 
     const toggleLike = async (e) => {
         e.stopPropagation();
@@ -203,6 +336,11 @@ const SeaPopup = ({ diary_id, onClose }) => {
             console.error('Failed to update like status', error);
         }
     };
+
+    const hasComments = comments.length > 0;
+    const showPlaceSection = todayPlace?.cate_num !== undefined && todayPlace?.cate_num !== null;
+
+
 
 
     const EmptyHeart = () => (
@@ -223,12 +361,8 @@ const SeaPopup = ({ diary_id, onClose }) => {
                 <div className="sea-popup__content">
                     <div className='sea-popup__header'>
                         <div className='sea-popup__header-left'>
-                            {diary?.user?.profile && (
-                                <>
-                                    <img src={diary.user.profile.profile_img} alt="Diary Author" className="sea-popup__author-profile-image" />
-                                    <p className="sea-popup__author-nickname">{diary.user.user_nick}님</p>
-                                </>
-                            )}
+                            <img src={diary?.User?.Profile?.profile_img || defaultImage} alt={`${diary?.User?.user_nick || 'User'}'s profile`} className="city-popup__author-profile-image" />
+                            <p className="city-popup__author-nickname">{diary?.User?.user_nick || 'User'}님</p>
                         </div>
                         <div className="sea-popup__header-right">
                             <button className="sea-popup__report-button" onClick={handleReportButtonClick}>
@@ -264,13 +398,13 @@ const SeaPopup = ({ diary_id, onClose }) => {
                                 <div className="sea-popup__title-line"></div>
                             </div>
                             <div className="sea-popup__diary-content">
-                                <p>{diary.diary_content}</p>
+                                <Viewer initialValue={diary?.diary_content || ""} />
                             </div>
                         </div>
                     </div>
 
                     <div className="sea-popup__comment-input-section">
-                        <img src={currentUserProfile.profile_img} alt="User Profile" className="sea-popup__user-profile-image" />                     <input
+                        <img src={userProfile.profile_img || defaultImage} alt="User Profile" className="sea-popup__user-profile-image" />                     <input
                             type="text"
                             value={newComment}
                             onChange={handleCommentChange}
@@ -282,11 +416,17 @@ const SeaPopup = ({ diary_id, onClose }) => {
 
                     <div className={`sea-popup__comments-section ${!hasComments ? 'sea-popup__comments-section--no-comments' : ''}`}>
                         {hasComments ? (
-                            comments.map((comment) => (
+                            Array.isArray(comments) && comments.map((comment) => (
                                 <div key={comment.comment_id} className="sea-popup__comment">
-                                    <img src={comment.user.profile.profile_img} alt="Profile" className="sea-popup__comment-profile-image" />
+                                    <img
+                                        src={comment.User?.Profile?.profile_img || ''}
+                                        alt={`${comment.User?.user_nick || 'User'}'s profile`}
+                                        className="sea-popup__comment-profile-image"
+                                    />
                                     <div className="sea-popup__comment-details">
-                                        <p className="sea-popup__comment-nickname">{comment.user.user_nick}님</p>
+                                        <p className="sea-popup__comment-nickname">
+                                            {comment.User?.user_nick ? `${comment?.User?.user_nick}님` : 'Anonymous'}
+                                        </p>
                                         <p
                                             className={`sea-popup__comment-content ${editingcomment_id === comment.comment_id ? 'sea-popup__comment-content--editable' : ''}`}
                                             contentEditable={editingcomment_id === comment.comment_id}
@@ -297,7 +437,7 @@ const SeaPopup = ({ diary_id, onClose }) => {
                                             {comment.comment_text}
                                         </p>
                                     </div>
-                                    {comment.user.user_nick === currentUserProfile.user_nick && (
+                                    {comment.User?.user_nick === userProfile.user_nick && (
                                         <div className="sea-popup__comment-actions">
                                             {editingcomment_id === comment.comment_id ? (
                                                 <button
