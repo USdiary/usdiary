@@ -13,18 +13,14 @@ const Contact = () => {
     const handleSubmit = async (e) => {
         e.preventDefault(); // 기본 폼 제출 동작 방지
 
-        const requestBody = {
-            sender: {
-                email: email,
-            },
-            subject: title,
-            message: inquiry,
-        };
+        const formData = new FormData();
+        formData.append('qna_title', title); // 제목
+        formData.append('qna_content', inquiry); // 문의 내용
 
         try {
-            const response = await axios.post('https://api.usdiary.site/questions', requestBody, {
+            const response = await axios.post('https://api.usdiary.site/qnas', formData, {
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'multipart/form-data', 
                 },
             });
 
@@ -38,11 +34,9 @@ const Contact = () => {
             setInquiry('');
         } catch (error) {
             if (error.response) {
-                // 요청이 이루어졌고, 서버가 상태 코드로 응답했으나 요청이 실패한 경우
                 console.error('Error:', error.response.data);
                 alert('문의 전송에 실패했습니다: ' + error.response.data.error);
             } else {
-                // 요청이 이루어지지 않았거나 다른 이유로 실패한 경우
                 console.error('Error:', error.message);
                 alert('문의 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.');
             }
@@ -52,13 +46,12 @@ const Contact = () => {
     return (
         <div className='wrap'>
             <Menu />
-            <div className='contact'>
+            <div className='profile'>
                 <ProfileMenu />
                 <div className='contact-contents'>
-                    <h1 className='contact-title'>고객 지원</h1>
+                    <div className='contact-title'>고객 지원</div>
                     <form className='contact-form' onSubmit={handleSubmit}>
                         <div className='form-group'>
-                            <label htmlFor='title'></label>
                             <input
                                 type='text'
                                 id='title'
@@ -69,7 +62,6 @@ const Contact = () => {
                             />
                         </div>
                         <div className='form-group'>
-                            <label htmlFor='email'></label>
                             <input
                                 type='email'
                                 id='email'
@@ -80,7 +72,6 @@ const Contact = () => {
                             />
                         </div>
                         <div className='form-group'>
-                            <label htmlFor='inquiry'></label>
                             <textarea
                                 id='inquiry'
                                 placeholder='문의 사항을 자유롭게 남겨주세요...'

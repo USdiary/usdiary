@@ -8,9 +8,9 @@ const RequestMooner = ({ onClose }) => {
     const [entireUsers, setEntireUsers] = useState([]);
 
     useEffect(() => {
-        axios.get('/friends/follow-request/handle') // 서버의 엔드포인트로 변경
+        axios.get('https://api.usdiary.site/friends/follow-request/handle')
             .then((response) => {
-                setEntireUsers(response.data); // 서버로부터 받은 데이터를 상태로 설정
+                setEntireUsers(response.data);
             })
             .catch((error) => {
                 console.error('Error fetching follow requests:', error);
@@ -18,34 +18,31 @@ const RequestMooner = ({ onClose }) => {
     }, []);
     
     const handleAccept = (user) => {
-        axios.post('/friends/follow-request/handle', {
-            data: {
-                follower_sign_id: user.id,
-                follower_user_nick: user.nickname,
-                follower_profile_img: user.image,
-                status: 'accepted',
-            },
+        axios.post('https://api.usdiary.site/friends/follow-request/handle', {
+            follower_sign_id: user.id,
+            action: 'accepted',
         })
         .then((response) => {
             setEntireUsers(prevUsers => prevUsers.filter(u => u.id !== user.id));
+        })
+        .catch((error) => {
+            console.error('Error accepting follow request:', error);
         });
     };
     
     const handleRefuse = (user) => {
-        axios.post('/friends/follow-request/handle', {
-            data: {
-                follower_sign_id: user.id,
-                follower_user_nick: user.nickname,
-                follower_profile_img: user.image,
-                status: 'refused',
-            },
+        axios.post('https://api.usdiary.site/friends/follow-request/handle', {
+            follower_sign_id: user.id,
+            action: 'refused',
         })
         .then((response) => {
             setEntireUsers(prevUsers => prevUsers.filter(u => u.id !== user.id));
+        })
+        .catch((error) => {
+            console.error('Error refusing follow request:', error);
         });
     };
     
-
     return (
         <div className="mooner_popup-overlay">
             <div className="mooner_popup-content">

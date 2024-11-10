@@ -1,87 +1,8 @@
-/* Reset */
-* {
-    list-style: none;
-    text-decoration: none;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-.wrap .contact {
-    flex-grow: 1; /* 남은 공간을 차지 */
-    margin: 38px 40px 0px 40px;
-    border-radius: 15px;
-    background-image: linear-gradient(rgb(206, 224, 200), rgb(255, 255, 255) 160px);
-}
-
-.wrap .profile-menu {
-    width: 219px;
-    height: 365px;
-    background-color: rgb(255, 255, 255);
-    margin-top: 1px;
-    border-radius: 15px 0px 15px 15px;
-    box-shadow: 0px 2px 3px 0px #9f9f9f;
-    padding-top: 8px;
-}
-  
-.wrap .profile-menu_content {
-    width: 195px;
-    height: 39px;
-    border-radius: 10px;
+.wrap .contact-contents {
     margin: auto;
-    margin-top: 10px;
-    display: flex;
-    line-height: 39px;
-    padding-left: 12px;
-}
-
-.wrap .contact-menu_content:hover {
-    background-color: #f0f0f0;
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.wrap .contact-menu_content:hover img {
-    filter: none;
-}
-
-.wrap .contact-menu_content:hover img {
-    filter: invert(36%) sepia(11%) saturate(811%) hue-rotate(178deg) brightness(52%) contrast(91%);
-}
-
-.wrap .contact-menu_content:hover .profile-menu_content_name {
-    color: #545F71;
-}
-
-.wrap .contact-menu_content.active {
-    background-color: #9FC393;
-}
-
-.wrap .contact-menu_content.active img {
-    filter: none;
-}
-
-.wrap .contact-menu_content.active .profile-menu_content_name {
-    color: #ffffff;
-}
-
-.wrap .contact-menu_content_img {
-    width: 35px;
-    height: 39px;
-    align-items: center;
-    display: flex;
-}
-
-.wrap .contact-menu_content img {
-    height: 21px;
-    filter: invert(36%) sepia(11%) saturate(811%) hue-rotate(178deg) brightness(52%) contrast(91%);
-}
-
-.contact-menu_content.active {
-    background-color: #545F71;
-}
-
-.wrap .contact-menu_content_name {
-    color: #545F71;
+    width: 65%;
+    min-width: 681px;
+    position: relative;
 }
 
 /* Reset */
@@ -90,16 +11,17 @@
     font-size: 24px;
     font-weight: bold;
     color: black;
+    margin-top: 60px;
     margin-bottom: 20px;
-    margin-left: 500px;
-    margin-top: -280px;
+    margin-left: 30px;
+    margin-top: 60px;
 }
 
 .contact-form {
     display: flex;
     flex-direction: column;
     width: 1000px;
-    margin-left: 500px;
+    margin-left: 30px;
     margin-top: 80px;
 }
 
@@ -107,14 +29,9 @@
     margin-bottom: 15px;
 }
 
-.label {
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
 .input-field,
 .textarea-field {
-    width: 90%; 
+    width: 100%; 
     border: 1px solid #757575; 
     border-radius: 8px; 
     padding: 10px;
@@ -130,11 +47,13 @@
 }
 
 .textarea-field {
+    width: 100%;
     min-height: 200px; 
     resize: vertical; 
 }
 
 .submit-button {
+    float: right;
     width: 80px; 
     background-color: #9FC393; 
     color: white; 
@@ -144,7 +63,6 @@
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.3s ease; 
-    margin-left: 820px; /* 왼쪽 여백 추가 */
 }
 
 

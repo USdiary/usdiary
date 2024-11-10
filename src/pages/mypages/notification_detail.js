@@ -6,7 +6,7 @@ import Menu from '../../components/menu';
 import ProfileMenu from '../../components/profileMenu';
 
 const NotificationDetail = () => {
-    const { id } = useParams();
+    const { id } = useParams(); // URL 파라미터에서 id 가져오기
     const [notification, setNotification] = useState(null);
     const [notifications, setNotifications] = useState([]);
     const [error, setError] = useState(null);
@@ -14,7 +14,8 @@ const NotificationDetail = () => {
     useEffect(() => {
         const fetchNotification = async () => {
             try {
-                const response = await fetch('https://api.usdiary.site/notices', {
+                // id를 URL에 포함시켜 단일 공지사항 조회
+                const response = await fetch(`https://api.usdiary.site/notice/${id}`, {
                     method: 'GET',
                 });
 
@@ -23,14 +24,15 @@ const NotificationDetail = () => {
                 }
 
                 const data = await response.json();
-                setNotifications(data); // 전체 공지사항을 상태로 저장
+                setNotification(data); // 단일 공지사항을 상태로 저장
 
-                const currentNotification = data.find((n) => n.id === Number(id));
-                if (currentNotification) {
-                    setNotification(currentNotification); // 현재 공지사항 설정
-                } else {
-                    setError('공지사항을 찾을 수 없습니다.');
+                // 전체 공지사항 목록을 가져와서 상태에 저장
+                const allNotificationsResponse = await fetch('https://api.usdiary.site/notices');
+                if (!allNotificationsResponse.ok) {
+                    throw new Error('전체 공지사항을 가져오는 데 실패했습니다.');
                 }
+                const allNotificationsData = await allNotificationsResponse.json();
+                setNotifications(allNotificationsData);
             } catch (err) {
                 setError(err.message);
             }

@@ -16,25 +16,22 @@ const FindPwd = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post('/users/findPwd', {
+            const response = await axios.post('https://api.usdiary.site/users/findPwd', {
                 user_name: name,
                 user_email: email,
                 sign_id: signId
             });
-            console.log('Response data:', response.data.data.temporaryPassword);
 
-
-            // 서버에서 응답을 받았을 때
             if (response.status === 200) {
                 setTemporaryPassword(response.data.data.temporaryPassword);
                 setShowResult(true);
-            } else {
-                alert(response.data.message || '비밀번호 찾기 실패');
-                setTemporaryPassword(null);
-                setShowResult(false);
             }
         } catch (error) {
-            alert('비밀번호 찾기 실패: 서버 오류');
+            if (error.response && error.response.status === 404) {
+                alert('사용자 정보와 일치하는 계정을 찾을 수 없습니다.');
+            } else {
+                alert('비밀번호 찾기 실패: 서버 오류');
+            }
             setTemporaryPassword(null);
             setShowResult(false);
         }
