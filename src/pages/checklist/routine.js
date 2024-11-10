@@ -3,43 +3,44 @@ import '../../assets/css/checklist.css';
 import right_arrow from '../../assets/images/right_arrow.png';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { PropTypes } from 'prop-types'
+import { PropTypes } from 'prop-types';
 
-const Routine = ({ onClose, onArrowClick, onSubmit}) => {
-  const [todo_id, setTodoId] = useState(null);
-  const [routine_id, setRoutineId] = useState(null);
-  const [routines, setRoutines] = useState([{ title: '', content: '', description: '', is_completed: false, toggle: false }]);
-  const [newRoutine, setNewRoutine] = useState({ description: '', is_completed: false });
-  const [signId, setSignId] = useState(null);  // State to store signId
+const Routine = ({ onClose, onArrowClick, onSubmit }) => {
+  const [routines, setRoutines] = useState([]);
+  const [signId, setSignId] = useState(null);
 
+  // 현재 날짜 기반으로 루틴 데이터 가져오기
   useEffect(() => {
-    // Assuming the JWT token is stored in localStorage
-    const token = localStorage.getItem('token'); // or sessionStorage.getItem('token')
-    
+    const token = localStorage.getItem('token');
+
     if (token) {
       try {
-        // Decode the token and extract signId
         const decodedToken = jwtDecode(token);
-        setSignId(decodedToken.signId);  // assuming 'signId' is in the decoded token payload
+        setSignId(decodedToken.signId);
       } catch (error) {
         console.error('Error decoding token:', error);
       }
     }
-  }, []);
 
-  /* useEffect(() => {
-    // 루틴 조회
+    // 날짜를 'YYYY-MM-DD' 형식으로 가져옴
+    const currentDate = new Date().toISOString().split('T')[0];
+
+    // 루틴 데이터 GET 요청
     const fetchRoutines = async () => {
       try {
-        const response = await axios.get(`/routines/${routine_id}`);
-        setRoutines(response.data); // 루틴 데이터 업데이트
+        const response = await axios.get(`https://api.usdiary.site/contents/routines`, {
+          params: {
+            date: currentDate
+          }
+        });
+        setRoutines(response.data.length > 0 ? response.data : []);
       } catch (error) {
-        console.error('루틴 데이터를 가져오는 데 실패했습니다:', error);
+        console.error('루틴을 가져오는 데 실패했습니다:', error);
       }
     };
 
     fetchRoutines();
-  }, [routine_id]); */
+  }, []);
 
   // 새로운 루틴 항목 추가 (3개까지만)
   const handleAddRoutine = () => {
@@ -56,7 +57,6 @@ const Routine = ({ onClose, onArrowClick, onSubmit}) => {
     );
     setRoutines(updatedRoutines);
   };
-  
 
   // 루틴 토글 상태 변경
   const handleToggleChange = (index) => {
@@ -79,14 +79,17 @@ const Routine = ({ onClose, onArrowClick, onSubmit}) => {
       return;
     }
 
+    const currentDate = new Date().toISOString().split('T')[0];
+
     try {
       for (const routine of routines) {
         const routineData = {
-          sign_id: signId, // Use the decoded signId
+          sign_id: signId,
           description: routine.description,
           is_completed: routine.is_completed,
+          date: currentDate
         };
-        await axios.post('/routines', routineData); // POST request to server
+        await axios.post('https://api.usdiary.site/contents/routines', routineData);
       }
       alert('루틴이 성공적으로 저장되었습니다.');
       onSubmit(routines);
@@ -95,7 +98,6 @@ const Routine = ({ onClose, onArrowClick, onSubmit}) => {
       alert('루틴을 저장하는 데 실패했습니다. 다시 시도해주세요.');
     }
   };
-  
 
   return (
     <div className="ck-popup-overlay">
@@ -182,22 +184,20 @@ Routine.propTypes = {
   onSubmit: PropTypes.func.isRequired,
 };
 
-
 export default Routine;
 
-// 루틴 관련 API 호출
-export const deleteRoutine = async (id) => {
+export const deleteRoutine = async (routine_id) => {
   try {
-    await axios.delete(`/routines/${id}`);
+    await axios.delete(`https://api.usdiary.site/contents/routines/${routine_id}`);
   } catch (error) {
     console.error('Failed to delete routine:', error);
     throw error;
   }
 };
 
-export const updateRoutine = async (id, routine) => {
+export const updateRoutine = async (routine_id, routine) => {
   try {
-    const response = await axios.put(`/routines/${id}`, routine);
+    const response = await axios.put(`https://api.usdiary.site/contents/routines/${routine_id}`, routine);
     return response.data;
   } catch (error) {
     console.error('Failed to update routine:', error);

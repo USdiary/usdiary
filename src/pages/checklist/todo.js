@@ -4,9 +4,11 @@ import right_arrow from '../../assets/images/right_arrow.png';
 import axios from 'axios';
 
 // API 호출 함수들
-const getTodos = async () => {
+const getTodos = async (date) => {
   try {
-    const response = await axios.get('/todos');
+    const response = await axios.get(`https://api.usdiary.site/contents/todos`, {
+      params: { date } // 쿼리 파라미터로 date 전달
+    });
     return response.data;
   } catch (error) {
     console.error('Failed to fetch todos:', error);
@@ -15,23 +17,36 @@ const getTodos = async () => {
 };
 
 const postTodos = async (todos) => {
+  const currentDate = new Date().toISOString().split('T')[0];
+
   try {
-    const response = await axios.post('/todos', { todos });
-    return response.data;
+    for (const todo of todos) {
+      const todoData = {
+        sign_id: todo.sign_id,
+        description: todo.description,
+        is_completed: todo.toggle,
+        date: currentDate
+      };
+
+      await axios.post('https://api.usdiary.site/contents/todos', todoData);
+    }
+    console.log('모든 투두가 서버에 성공적으로 저장되었습니다.');
   } catch (error) {
-    console.error('Failed to post todos:', error);
+    console.error('투두를 저장하는 데 실패했습니다:', error);
     throw error;
   }
 };
 
 const Todo = ({ onClose, onArrowClick, onSubmit }) => {
   const [todos, setTodos] = useState([]);
+  
+  // 날짜를 'YYYY-MM-DD' 형식으로 가져옴
+  const currentDate = new Date().toISOString().split('T')[0];
 
-  // Fetch todos when component mounts
   useEffect(() => {
     const fetchTodos = async () => {
       try {
-        const data = await getTodos();
+        const data = await getTodos(currentDate);
         setTodos(data.length > 0 ? data : []);
       } catch (error) {
         console.error('Failed to fetch todos:', error);
@@ -39,7 +54,7 @@ const Todo = ({ onClose, onArrowClick, onSubmit }) => {
     };
 
     fetchTodos();
-  }, []);
+  }, [currentDate]);
 
   const handleAddTodo = () => {
     if (todos.length < 5) {
@@ -162,18 +177,18 @@ const Todo = ({ onClose, onArrowClick, onSubmit }) => {
 export default Todo;
 
 // 투두 관련 API 호출
-export const deleteTodo = async (id) => {
+export const deleteTodo = async (todo_id) => {
   try {
-    await axios.delete(`/todos/${id}`);
+    await axios.delete(`https://api.usdiary.site/contents/todos/${todo_id}`);
   } catch (error) {
     console.error('Failed to delete todo:', error);
     throw error;
   }
 };
 
-export const updateTodo = async (id, todo) => {
+export const updateTodo = async (todo_id, todo) => {
   try {
-    const response = await axios.put(`/todos/${id}`, todo);
+    const response = await axios.put(`https://api.usdiary.site/contents/todos/${todo_id}`, todo);
     return response.data;
   } catch (error) {
     console.error('Failed to update todo:', error);
