@@ -171,15 +171,14 @@
     height: 28px;
     background-color: #F3F3F3;
     border-radius: 20px;
-    padding-left: 8px;
+    padding-left: 14px;
     display: flex;
     margin-top: 10px;
 }
 
 .wrap .profile-follow_box_content_search img {
-    width: 12px;
-    height: 12.61px;
-    margin-right: 6px;
+    width: 13px;
+    height: 13.66px;
     margin-top: 8px;
 }
 
@@ -315,14 +314,14 @@
     border-radius: 20px;
     color: #515151;
     margin-bottom: 18px;
+    padding-left: 22px;
 }
 
 .mooner_popup_search-id img{
     width: 17px;
     height: 17.68px;
     margin: auto;
-    margin-left: 15px;
-    margin-right: 10px;
+    margin-right: 22px;
 }
 
 .mooner_popup_search-id input {
