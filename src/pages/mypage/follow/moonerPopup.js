@@ -8,7 +8,7 @@ import exit from '../../../assets/images/exit.png';
 const MoonerPopup = ({ follower, onClose }) => {
     const [diaries, setDiaries] = useState([]);
     const [pinCount, setPinCount] = useState(0);
-    const [relationship, setRelationship] = useState(null);
+    const [relationship, setRelationship] = useState(null); // 초기 상태를 null로 설정
     const [btnText, setBtnText] = useState('');
     const [sign_id, setSignId] = useState(null);
 
@@ -53,13 +53,16 @@ const MoonerPopup = ({ follower, onClose }) => {
                     const isFollowing = followingsResponse.data.some(f => f.User === follower.User);
 
                     if (isFollower && isFollowing) {
-                        relationshipStatus = 'friend';
-                        relationshipText = '무너';
+                        relationshipStatus = 'accepted'; // 'friend' -> 'accepted'
+                        relationshipText = '무너 승인됨';
                     } else if (isFollower) {
-                        relationshipStatus = 'requested';
+                        relationshipStatus = 'pending'; // 'requested' -> 'pending'
                         relationshipText = '무너 신청 중';
+                    } else if (isFollowing) {
+                        relationshipStatus = 'rejected'; // 'accepted' -> 'rejected'
+                        relationshipText = '무너 거부됨';
                     } else {
-                        relationshipStatus = 'none';
+                        relationshipStatus = null; // 'none' -> null (기본값 없이 null 허용)
                         relationshipText = '무너맺기';
                     }
 
@@ -112,12 +115,18 @@ const MoonerPopup = ({ follower, onClose }) => {
 
     // 팔로우/언팔로우 버튼 클릭 핸들러
     const handleFollowClick = async () => {
-        if (btnText === '무너') {
+        if (btnText === '무너 승인됨') {
             await deleteFollowing(); // 팔로잉 삭제
             setBtnText('무너맺기');
         } else if (btnText === '무너맺기') {
             await followUser(); // 팔로우 요청
             setBtnText('무너 신청 중');
+        } else if (btnText === '무너 신청 중') {
+            await rejectUser(); // 요청 거부
+            setBtnText('무너맺기');
+        } else if (btnText === '무너 거부됨') {
+            await removeFriend(); // 친구 제거
+            setBtnText('무너맺기');
         }
     };
 
@@ -127,7 +136,7 @@ const MoonerPopup = ({ follower, onClose }) => {
             await axios.post(`https://api.usdiary.site/friends/follow-request`, {
                 requested_sign_id: follower.User,
             });
-            setRelationship('requested');
+            setRelationship('pending');
         } catch (error) {
             console.error("Error following user:", error);
         }
@@ -142,9 +151,37 @@ const MoonerPopup = ({ follower, onClose }) => {
                     follower_sign_id: follower.User,
                 }
             });
-            setRelationship(null);
+            setRelationship(null); // 팔로잉을 삭제하면 관계 상태를 null로 설정
         } catch (error) {
             console.error("Error deleting following:", error);
+        }
+    };
+
+    // 요청 거부
+    const rejectUser = async () => {
+        try {
+            await axios.delete(`https://api.usdiary.site/friends/follow-request`, {
+                data: {
+                    requested_sign_id: follower.User,
+                }
+            });
+            setRelationship('rejected'); // 요청 거부 후 'rejected' 상태로 설정
+        } catch (error) {
+            console.error("Error rejecting user:", error);
+        }
+    };
+
+    // 친구 제거
+    const removeFriend = async () => {
+        try {
+            await axios.delete(`https://api.usdiary.site/friends/remove`, {
+                data: {
+                    friend_sign_id: follower.User,
+                }
+            });
+            setRelationship('rejected'); // 친구를 제거하면 'rejected' 상태로 설정
+        } catch (error) {
+            console.error("Error removing friend:", error);
         }
     };
 
