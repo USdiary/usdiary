@@ -57,9 +57,10 @@ const ProfileFix = () => {
   };
 
   return (
-    <div className="fix_page">
+    <div className="wrap">
       <Menu />
-      <div className="fix_page-container">
+      
+      <div className="profile">
         <ProfileMenu />
         <div className="fix_content-box">
           {activeButton === 'Profile' && (
