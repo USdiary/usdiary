@@ -8,11 +8,11 @@ import Routine from './routine';
 import Todo from './todo';
 
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
-// API 호출 함수들
-export const postDiary = async (diary) => {
+export const postDiary = async (diary, signId) => {
   try {
-    const response = await axios.post('/diaries', diary);
+    const response = await axios.post('https://api.usdiary.site/diaries', diary);
     return response.data;
   } catch (error) {
     console.error('Failed to post diary:', error);
@@ -20,9 +20,9 @@ export const postDiary = async (diary) => {
   }
 };
 
-export const putRoutine = async (routine_id, updatedRoutine) => {
+export const patchRoutine = async (routine_id, updatedRoutine) => {
   try {
-    const response = await axios.put(`/routines/${routine_id}`, updatedRoutine);
+    const response = await axios.patch(`https://api.usdiary.site/contents/routines/${routine_id}`, updatedRoutine);
     return response.data;
   } catch (error) {
     console.error('Failed to update routine:', error);
@@ -32,16 +32,16 @@ export const putRoutine = async (routine_id, updatedRoutine) => {
 
 export const deleteRoutine = async (routine_id) => {
   try {
-    await axios.delete(`/routines/${routine_id}`);
+    await axios.delete(`https://api.usdiary.site/contents/routines/${routine_id}`);
   } catch (error) {
     console.error('Failed to delete routine:', error);
     throw error;
   }
 };
 
-export const putTodo = async (todo_id, updatedTodo) => {
+export const patchTodo = async (todo_id, updatedTodo) => {
   try {
-    const response = await axios.put(`/todos/${todo_id}`, updatedTodo);
+    const response = await axios.patch(`https://api.usdiary.site/contents/todos/${todo_id}`, updatedTodo);
     return response.data;
   } catch (error) {
     console.error('Failed to update todo:', error);
@@ -51,33 +51,43 @@ export const putTodo = async (todo_id, updatedTodo) => {
 
 export const deleteTodo = async (todo_id) => {
   try {
-    await axios.delete(`/todos/${todo_id}`);
+    await axios.delete(`https://api.usdiary.site/contents/todos/${todo_id}`);
   } catch (error) {
     console.error('Failed to delete todo:', error);
     throw error;
   }
 };
 
-
-
 // 체크리스트 페이지 전체화면 컴포넌트
 const CheckList = ({ onBack }) => {
   const location = useLocation();
   const { diary } = location.state || {};
 
-  const [routines, setRoutines] = useState([]); // 초기 루틴 상태
+  const [routines, setRoutines] = useState([]);
   const [todos, setTodos] = useState([]);
+  const [signId, setSignId] = useState(null);
 
   useEffect(() => {
-    // 다이어리 객체가 있는 경우에만 초기 데이터를 설정
-    if (diary) {
-      // 루틴과 투두를 초기화
+    const token = localStorage.getItem('token');
+
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        setSignId(decodedToken.signId);
+      } catch (error) {
+        console.error('Error decoding token:', error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (diary && signId) {
       const fetchRoutinesAndTodos = async () => {
         try {
-          const routinesResponse = await axios.get(`/routines?user_id=${diary.user_id}`);
+          const routinesResponse = await axios.get('https://api.usdiary.site/contents/routines');
           setRoutines(routinesResponse.data);
-          
-          const todosResponse = await axios.get(`/todos?diary_id=${diary.diary_id}`);
+
+          const todosResponse = await axios.get('https://api.usdiary.site/contents/todos');
           setTodos(todosResponse.data);
         } catch (error) {
           console.error('Failed to fetch routines and todos:', error);
@@ -86,11 +96,10 @@ const CheckList = ({ onBack }) => {
 
       fetchRoutinesAndTodos();
     }
-  }, [diary]);
+  }, [diary, signId]);
 
-
-  const [showRoutine, setShowRoutine] = useState(false); // Popup을 Routine으로 변경
-  const [showTodo, setShowTodo] = useState(false); // NewPopup을 Todo로 변경
+  const [showRoutine, setShowRoutine] = useState(false);
+  const [showTodo, setShowTodo] = useState(false);
 
   // 스크롤 잠금
   useEffect(() => {
@@ -125,23 +134,27 @@ const CheckList = ({ onBack }) => {
 
   // 루틴 제출 핸들러
   const handleRoutineSubmit = async (newRoutines) => {
-    try {
-      await postDiary(newRoutines);
-      const updatedRoutines = await axios.get(`/routines?user_id=${diary.user_id}`);
-      setRoutines(updatedRoutines.data);
-    } catch (error) {
-      console.error('Failed to update routines:', error);
+    if (signId) {
+      try {
+        await postDiary(newRoutines, signId);
+        const updatedRoutines = await axios.get('https://api.usdiary.site/contents/routines');
+        setRoutines(updatedRoutines.data);
+      } catch (error) {
+        console.error('Failed to update routines:', error);
+      }
     }
   };
 
   // 투두 제출 핸들러
   const handleTodoSubmit = async (newTodos) => {
-    try {
-      await postDiary(newTodos);
-      const updatedTodos = await axios.get(`/todos?diary_id=${diary.diary_id}`);
-      setTodos(updatedTodos.data);
-    } catch (error) {
-      console.error('Failed to update todos:', error);
+    if (signId) {
+      try {
+        await postDiary(newTodos, signId);
+        const updatedTodos = await axios.get('https://api.usdiary.site/contents/todos');
+        setTodos(updatedTodos.data);
+      } catch (error) {
+        console.error('Failed to update todos:', error);
+      }
     }
   };
 
@@ -153,7 +166,7 @@ const CheckList = ({ onBack }) => {
           <div className="checklist-title-name">Check List</div>
           <div
             className="checklist-title-plusbtn"
-            onClick={() => diary ? null : setShowRoutine(true)} // diary가 있으면 클릭할 수 없음
+            onClick={() => diary ? null : setShowRoutine(true)}
             style={{ cursor: diary ? 'not-allowed' : 'pointer', opacity: diary ? 0.5 : 1 }} // 비활성화 스타일
           >
             +
@@ -205,7 +218,7 @@ const CheckList = ({ onBack }) => {
                     id={`todo-toggle-${index}`}
                     hidden
                     checked={todo.is_completed}
-                    readOnly // 읽기 전용으로 설정
+                    readOnly
                   />
                   <label htmlFor={`todo-toggle-${index}`}>
                     <span></span>
@@ -217,9 +230,25 @@ const CheckList = ({ onBack }) => {
             ))}
           </div>
         </div>
+
+        {showRoutine && (
+          <Routine
+            routines={routines}
+            onSubmit={handleRoutineSubmit}
+            onClose={handlePopupClose}
+            onArrowClick={handleRoutineArrowClick}
+          />
+        )}
+
+        {showTodo && (
+          <Todo
+            todos={todos}
+            onSubmit={handleTodoSubmit}
+            onClose={handlePopupClose}
+            onArrowClick={handleTodoArrowClick}
+          />
+        )}
       </div>
-      {showRoutine && <Routine onClose={handlePopupClose} onArrowClick={handleRoutineArrowClick} onSubmit={handleRoutineSubmit} />}
-      {showTodo && <Todo onClose={handlePopupClose} onArrowClick={handleTodoArrowClick} onSubmit={handleTodoSubmit} />}
     </div>
   );
 };
