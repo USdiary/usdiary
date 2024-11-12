@@ -48,142 +48,117 @@ const Routine = ({ onClose, onArrowClick, onSubmit }) => {
   }, []);
 
   // 새로운 루틴 항목 추가 (3개까지만)
-  const handleAddRoutine = async () => {
-    // 루틴이 3개 미만일 경우에만 추가 가능
+  const handleAddRoutine = () => {
     if (routines.length < 3) {
-      const date = new Date().toISOString().split('T')[0];
       const newRoutine = {
-        routine_title: '임시 제목',  // 제목을 '임시 제목'으로 설정
+        routine_title: '',
         description: '',
-        is_completed: false,
-        date,
+        is_completed: false
       };
 
-      try {
-        // 서버에 루틴 추가 요청 (routine_id 제외)
-        const response = await axios.post(
-          'https://api.usdiary.site/contents/routines',
-          newRoutine,
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            },
-          }
-        );
-
-        // 서버에서 반환된 실제 routine_id로 업데이트
-        const createdRoutine = response.data;
-        setRoutines((prevRoutines) => [
-          ...prevRoutines,
-          createdRoutine // 실제 routine_id가 포함된 새 루틴 추가
-        ]);
-        console.log('서버에 루틴 추가 성공:', createdRoutine);
-      } catch (error) {
-        console.error('새로운 루틴 추가에 실패했습니다:', error);
-        if (error.response) {
-          console.log('서버 응답:', error.response.data); // 서버에서 반환된 오류 메시지 확인
-        }
-      }
+      // 로컬 상태에서 새로운 루틴 추가
+      setRoutines((prevRoutines) => [
+        ...prevRoutines,
+        newRoutine
+      ]);
+      console.log('새로운 루틴 추가 성공:', newRoutine);
     } else {
       alert('루틴은 최대 3개까지만 추가할 수 있습니다.');
     }
   };
 
-  // 루틴 수정 함수
-  const handleRoutineChange = async (index, field, newValue) => {
-    const routineToUpdate = routines[index];
 
-    if (!routineToUpdate || !routineToUpdate.routine_id) {
-      console.error('루틴 ID가 정의되지 않았습니다.');
-      return;
-    }
-
-    const updatedRoutine = { ...routineToUpdate, [field]: newValue };
-
-    // 로컬 상태 업데이트만 하고 서버에 저장하지 않음
-    const updatedRoutines = routines.map((routine, i) =>
-      i === index ? updatedRoutine : routine
+  // 제목 및 설명을 업데이트하는 함수
+  const handleRoutineChange = (index, field, value) => {
+    setRoutines((prevRoutines) =>
+      prevRoutines.map((routine, idx) =>
+        idx === index ? { ...routine, [field === 'title' ? 'routine_title' : 'description']: value } : routine
+      )
     );
-    setRoutines(updatedRoutines);
-    console.log("루틴 수정됨:", routineToUpdate.routine_id);
   };
 
-  // 루틴 토글 상태 변경
+  // 완료 상태를 토글하는 함수
   const handleToggleChange = (index) => {
-    const updatedRoutines = routines.map((routine, i) =>
-      i === index ? { ...routine, toggle: !routine.toggle } : routine
+    setRoutines((prevRoutines) =>
+      prevRoutines.map((routine, idx) =>
+        idx === index ? { ...routine, is_completed: !routine.is_completed } : routine
+      )
     );
-    setRoutines(updatedRoutines);
   };
 
   // 루틴 삭제
-  const handleDeleteRoutine = async (index) => {
+  const handleDeleteRoutine = (index) => {
     const routineToDelete = routines[index];
+    
     if (!routineToDelete || !routineToDelete.routine_id) {
       console.error('삭제할 루틴이 없습니다.');
       return;
     }
-
-    try {
-      // 서버에 DELETE 요청을 보내서 루틴 삭제
-      await axios.delete(`https://api.usdiary.site/contents/routines/${routineToDelete.routine_id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+  
+    // 서버에 삭제 요청 보내기
+    axios.delete(`https://api.usdiary.site/contents/routines/${routineToDelete.routine_id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    })
+      .then(() => {
+        console.log('루틴 삭제 성공:', routineToDelete.routine_id);
+  
+        // 삭제된 루틴을 화면에서 제거
+        setRoutines((prevRoutines) => prevRoutines.filter((routine, idx) => idx !== index));
+      })
+      .catch((error) => {
+        console.error('루틴 삭제 중 오류 발생:', error);
       });
-
-      // 요청이 성공하면 로컬 상태에서 삭제
-      const updatedRoutines = routines.filter((routine, i) => i !== index);
-      setRoutines(updatedRoutines);
-      console.log("루틴 삭제 성공:", routineToDelete.routine_id);
-    } catch (error) {
-      console.error('루틴 삭제에 실패했습니다:', error);
-    }
   };
 
-  // 루틴 저장 함수
+  // 모든 루틴 삭제 후 다시 저장하는 함수
   const handleSave = async () => {
-    const currentDate = new Date().toISOString().split('T')[0];
-
-    // 유효성 검사: 루틴 제목과 설명이 비어 있지 않은지 확인
-    const invalidRoutines = routines.filter(routine => !routine.routine_title || !routine.description);
-    if (invalidRoutines.length > 0) {
-      alert('루틴 제목과 설명을 모두 입력해 주세요.');
-      return; // 필수 항목이 비어 있으면 저장하지 않음
-    }
-
     try {
-      // 수정된 루틴만 서버에 저장
-      for (const routine of routines) {
-        const routineData = {
-          routine_title: routine.routine_title,
-          description: routine.description,
-          is_completed: routine.is_completed,
-          date: currentDate,
-        };
+      // 1. 서버에 존재하는 모든 루틴 삭제
+      await Promise.all(
+        routines.map((routine) => {
+          if (routine.routine_id) {
+            return axios.delete(`https://api.usdiary.site/contents/routines/${routine.routine_id}`, {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            });
+          } else {
+            console.warn('루틴 ID가 없어서 삭제하지 않음:', routine);
+            return Promise.resolve(); // ID가 없으면 삭제하지 않음
+          }
+        })
+      );
+      console.log("서버에 있는 모든 루틴 삭제 성공");
 
-        // 루틴 데이터가 이미 존재하면 PATCH로 수정, 없으면 POST로 추가
-        if (routine.routine_id) {
-          // 이미 존재하는 루틴 수정
-          await axios.patch(`https://api.usdiary.site/contents/routines/${routine.routine_id}`, routineData, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-          });
-        } else {
-          // 새로운 루틴 추가
-          await axios.post('https://api.usdiary.site/contents/routines', routineData, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-          });
-        }
-      }
+      // 2. 상태에 있는 루틴을 서버에 다시 추가 (빈 내용은 제외하고)
+      const newRoutinesPromises = routines
+        .filter(routine => routine.routine_title || routine.description) // 빈 내용인 루틴 제외
+        .map((routine) => {
+          const formattedDate = new Date().toISOString().split('T')[0]; // 현재 날짜를 YYYY-MM-DD 형식으로 저장
 
-      alert('루틴이 성공적으로 저장되었습니다.');
+          return axios.post(
+            "https://api.usdiary.site/contents/routines",
+            {
+              routine_title: routine.routine_title,
+              description: routine.description,
+              is_completed: routine.is_completed,
+              date: formattedDate, // YYYY-MM-DD 형식으로 설정
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            }
+          );
+        });
+
+      // 새로운 루틴을 서버에 추가
+      const createdRoutines = await Promise.all(newRoutinesPromises);
+      console.log("새 루틴 추가 성공:", createdRoutines.map((res) => res.data));
     } catch (error) {
-      console.error('루틴을 저장하는 데 실패했습니다:', error.response ? error.response.data.data : error.message);
-      alert('루틴을 저장하는 데 실패했습니다. 다시 시도해주세요.');
+      console.error("루틴 저장 중 오류 발생:", error);
     }
   };
 
@@ -217,7 +192,7 @@ const Routine = ({ onClose, onArrowClick, onSubmit }) => {
                       type="checkbox"
                       id={`toggle-${index}`}
                       hidden
-                      checked={routine.toggle}
+                      checked={routine.is_completed}
                       onChange={() => handleToggleChange(index)}
                     />
                     <label htmlFor={`toggle-${index}`} className="routine-middle-box-toggleSwitch">

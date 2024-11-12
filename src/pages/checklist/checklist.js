@@ -81,23 +81,34 @@ const CheckList = ({ onBack }) => {
   }, []);
 
   useEffect(() => {
+    console.log(diary, signId);
     if (diary && signId) {
       const fetchRoutinesAndTodos = async () => {
         try {
-          const routinesResponse = await axios.get('https://api.usdiary.site/contents/routines');
+          // 현재 날짜를 YYYY-MM-DD 형식으로 구하기
+          const currentDate = new Date().toISOString().split('T')[0];
+  
+          // 루틴 데이터를 날짜를 기반으로 요청
+          const routinesResponse = await axios.get('https://api.usdiary.site/contents/routines', {
+            params: { date: currentDate }
+          });
           setRoutines(routinesResponse.data);
-
-          const todosResponse = await axios.get('https://api.usdiary.site/contents/todos');
+  
+          // 할 일 데이터를 날짜를 기반으로 요청
+          const todosResponse = await axios.get('https://api.usdiary.site/contents/todos', {
+            params: { date: currentDate }
+          });
           setTodos(todosResponse.data);
+          console.log("서버 잘 받아짐요")
         } catch (error) {
           console.error('Failed to fetch routines and todos:', error);
         }
       };
-
+  
       fetchRoutinesAndTodos();
     }
   }, [diary, signId]);
-
+  
   const [showRoutine, setShowRoutine] = useState(false);
   const [showTodo, setShowTodo] = useState(false);
 
