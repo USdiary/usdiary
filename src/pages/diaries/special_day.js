@@ -43,6 +43,7 @@ import ticket from '../../assets/images/ticket.png';
 import PlaceList from './PlaceList';
 
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 const iconMap = {
   1: seashell,
@@ -72,36 +73,33 @@ const SpecialDay = ({ onBack }) => {
   const [places, setPlaces] = useState([]);
   const [selectedIcon, setSelectedIcon] = useState(null);
   const [todayPlace, setTodayPlace] = useState(null);
-
+  const [signId, setSignId] = useState(null);
 
   useEffect(() => {
     const fetchTodayPlace = async () => {
-      if (diary && diary.diary_id) {
-        try {
-          const response = await axios.get(`/contents/places/${diary.diary_id}`);
+      const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식으로 현재 날짜 가져오기
+    
+      try {
+        // diary가 있는 경우
+        if (diary) {
+          const response = await axios.get(`https://api.usdiary.site/contents/places`, {
+            params: { date: currentDate }
+          });
           const fetchedPlace = response.data;
-          
+  
           setTodayPlace(fetchedPlace);
           setSelectedIcon(iconMap[fetchedPlace.cate_num]);
           setEmotion(fetchedPlace.diary_emotion);
           setMemo(fetchedPlace.diary_memo);
-        } catch (error) {
-          console.error('오늘의 장소를 불러오는 데 실패했습니다.', error);
         }
-      } else {
-        // 다이어리가 없을 경우 이번 달의 장소를 가져옵니다.
-        const currentMonth = new Date().getMonth() + 1;
-        try {
-          const response = await axios.get(`/diaries/places`, {
-            params: { month: currentMonth }
-          });
-          setPlaces(response.data); // 이번 달의 장소 메모 저장
-        } catch (error) {
-          console.error("데이터를 불러오는 데 실패했습니다.", error);
+        else {
+          console.log("diary가 없습니다.");
         }
+      } catch (error) {
+        console.error('오늘의 장소를 불러오는 데 실패했습니다.', error);
       }
     };
-
+  
     fetchTodayPlace();
   }, [diary]);
 
@@ -143,21 +141,31 @@ const SpecialDay = ({ onBack }) => {
       today_mood: diary_emotion, // 오늘의 기분
       place_memo: diary_memo  // 한 줄 메모
     };
+
+    const token = localStorage.getItem('token');
   
-    try {
-      const response = await axios.post('/contents/places', data, {
-        headers: {
-          'Content-Type': 'application/json'
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        setSignId(decodedToken.signId);
+  
+        // 서버로 POST 요청
+        const response = await axios.post('https://api.usdiary.site/contents/places', data, {
+          headers: {
+            'Authorization': `Bearer ${token}`  // Authorization 헤더에 토큰 추가
+          }
+        });
+  
+        if (response.status === 200) {
+          console.log('데이터가 성공적으로 저장되었습니다.');
+        } else {
+          console.error('데이터 저장에 실패했습니다.', await response.text());
         }
-      });
-  
-      if (response.status === 200) {
-        console.log('데이터가 성공적으로 저장되었습니다.');
-      } else {
-        console.error('데이터 저장에 실패했습니다.', await response.text());
+      } catch (error) {
+        console.error('토큰 디코딩 중 오류 발생:', error);
       }
-    } catch (error) {
-      console.error('서버 요청 중 오류가 발생했습니다.', error);
+    } else {
+      console.error('토큰이 존재하지 않습니다.');
     }
   };
 
