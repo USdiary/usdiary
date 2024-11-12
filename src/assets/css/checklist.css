@@ -368,7 +368,7 @@
 .ck-popup-background {
     background: #FFFDB9;
     border-radius: 42px;
-    width: 450px;
+    min-width: 450px;
     height: 624.1px;
     /* padding: 70px 0px 0px 0px; */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
