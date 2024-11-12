@@ -78,30 +78,31 @@ const SpecialDay = ({ onBack }) => {
   useEffect(() => {
     const fetchTodayPlace = async () => {
       const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식으로 현재 날짜 가져오기
-    
-      try {
-        // diary가 있는 경우
-        if (diary) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
           const response = await axios.get(`https://api.usdiary.site/contents/places`, {
-            params: { date: currentDate }
+            params: { date: currentDate },
+            headers: {
+              'Authorization': `Bearer ${token}`  // 토큰을 Authorization 헤더에 추가
+            }
           });
           const fetchedPlace = response.data;
-  
           setTodayPlace(fetchedPlace);
           setSelectedIcon(iconMap[fetchedPlace.cate_num]);
           setEmotion(fetchedPlace.diary_emotion);
           setMemo(fetchedPlace.diary_memo);
+        } catch (error) {
+          console.error('오늘의 장소를 불러오는 데 실패했습니다.', error);
         }
-        else {
-          console.log("diary가 없습니다.");
-        }
-      } catch (error) {
-        console.error('오늘의 장소를 불러오는 데 실패했습니다.', error);
+      } else {
+        console.error('토큰이 존재하지 않습니다.');
       }
     };
-  
+
     fetchTodayPlace();
-  }, [diary]);
+  }, []);
+
 
   const getIconClass = (cate_num) => {
     return `sea-popup__icon-${cate_num}`;
@@ -131,35 +132,40 @@ const SpecialDay = ({ onBack }) => {
       stadium: '14',
       auditorium: '15'
     };
-  
+
     // visibleDiv 값을 숫자로 변환
     const cate_num = divNumbers[visibleDiv];
+
+    const currentDate = new Date().toISOString().split('T')[0];
 
     // 서버로 전송할 데이터
     const data = {
       cate_num: cate_num, // visibleDiv에 매핑된 숫자
       today_mood: diary_emotion, // 오늘의 기분
-      place_memo: diary_memo  // 한 줄 메모
+      place_memo: diary_memo,  // 한 줄 메모
+      date: currentDate
     };
 
     const token = localStorage.getItem('token');
-  
+
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
         setSignId(decodedToken.signId);
-  
+
         // 서버로 POST 요청
         const response = await axios.post('https://api.usdiary.site/contents/places', data, {
           headers: {
             'Authorization': `Bearer ${token}`  // Authorization 헤더에 토큰 추가
           }
         });
-  
-        if (response.status === 200) {
-          console.log('데이터가 성공적으로 저장되었습니다.');
+
+        if (response.status === 201) {
+          // 서버 응답 메시지 확인
+          const message = response.data.message;  // 응답에서 message 추출
+          console.log(message);
         } else {
-          console.error('데이터 저장에 실패했습니다.', await response.text());
+          console.error('데이터 저장에 실패했습니다.', response.data);
         }
       } catch (error) {
         console.error('토큰 디코딩 중 오류 발생:', error);
@@ -273,7 +279,7 @@ const SpecialDay = ({ onBack }) => {
           <div className='sea-popup__container' style={{ boxShadow: 'none', marginBottom: '5px', height: '400px' }}>
             <img src={selectedIcon} alt="Category Icon" className={`sea-popup__category-icon ${getIconClass(todayPlace.cate_num)}`} />
             <div className="sea-popup__icon-text">
-              <div className="sea-popup__icon-emotion">{todayPlace?.diary_emotion}</div>
+              <div className="sea-popup__icon-emotion">{todayPlace.diary_emotion}</div>
               <div className="sea-popup__icon-memo">{todayPlace.diary_memo}</div>
             </div>
           </div>
