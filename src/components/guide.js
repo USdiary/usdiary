@@ -25,7 +25,6 @@ const GuidePopup = ({ lastLogin }) => {
 
     const handleClose = () => {
         setIsOpen(false);
-        // last_login 값을 업데이트 
         localStorage.setItem('last_login', new Date().toISOString()); 
     };
 
