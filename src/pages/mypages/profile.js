@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../../assets/css/profile.css';
 import Menu from '../../components/menu';
 import ProfileMenu from '../../components/profileMenu';
-import BasicProfile from '../../assets/images/basicprofileimg.png'; 
+import BasicProfile from '../../assets/images/basicprofileimg.png';
 
 const base64UrlToBase64 = (base64Url) => {
   let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -57,16 +57,23 @@ const ProfilePage = () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, 
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({ password }),
     });
 
     if (response.ok) {
-      navigate('/profilefix'); 
-    } else {
-      setErrorMessage('비밀번호가 일치하지 않습니다.');
-    }
+      const responseData = await response.json();
+      if (responseData.message === "비밀번호가 일치합니다.") {
+        navigate('/profilefix');
+      }
+    } else if (response.status === 401) {
+        setErrorMessage('잘못된 비밀번호입니다.');
+      } else if (response.status === 404) {
+        setErrorMessage('사용자를 찾을 수 없습니다.');
+      } else {
+        setErrorMessage('서버 오류가 발생했습니다.');
+      }
   };
 
   if (!userData) {
@@ -74,20 +81,21 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="pro_page">
+    <div className="wrap">
       <Menu />
 
-      <div className="pro_page-container">
+      <div className="profile">
         <ProfileMenu />
         <div className="pro_content-box">
           <div className="pro_profile-section">
-            <div className="pro_profile-image-space" 
-                 style={{
-                   backgroundImage: userData.profile_img ? `url(${userData.profile_img})` : `url(${BasicProfile})`,
-                   backgroundSize: 'cover',
-                   backgroundPosition: 'center',
-                 }}
+            <div className="pro_profile-image-space"
+              style={{
+                backgroundImage: userData.profile_img ? `url(${userData.profile_img})` : `url(${BasicProfile})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
             ></div>
+            <div class="pro_additional-circle"></div>
             <p className="pro_profile-username">{userData.user_nick}</p>
             <div className="pro_password-container">
               <input
