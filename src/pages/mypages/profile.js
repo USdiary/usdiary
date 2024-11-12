@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import '../../assets/css/profile.css';
 import Menu from '../../components/menu';
 import ProfileMenu from '../../components/profileMenu';
+import BasicProfile from '../../assets/images/basicprofileimg.png';
 
 const base64UrlToBase64 = (base64Url) => {
-  // Base64Url에서 '-'를 '+'로, '_'를 '/'로 변환
   let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
 
-  // Base64 문자열의 길이를 4의 배수로 맞추기 위해 '=' 추가
   while (base64.length % 4) {
     base64 += '=';
   }
@@ -22,7 +21,6 @@ const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // 사용자 정보 가져오기
   useEffect(() => {
     const token = localStorage.getItem('token');
 
@@ -31,7 +29,6 @@ const ProfilePage = () => {
       return;
     }
 
-    // JWT를 '.' 기준으로 분리하여 payload 부분 가져오기
     const tokenParts = token.split('.');
     if (tokenParts.length !== 3) {
       console.error('JWT 형식이 잘못되었습니다.');
@@ -43,58 +40,63 @@ const ProfilePage = () => {
     setUserData(userDataFromToken);
   }, []);
 
-  // 비밀번호 확인 함수
   const handleConfirm = async () => {
     if (!password) {
       setErrorMessage('비밀번호를 입력해주세요.');
       return;
     }
 
-    const token = localStorage.getItem('token'); // 저장된 JWT 토큰 가져오기
+    const token = localStorage.getItem('token');
 
     if (!token) {
       setErrorMessage('로그인이 필요합니다.');
       return;
     }
 
-    // 서버에 비밀번호 확인 요청
-    const response = await fetch('/users/check-password', {
+    const response = await fetch('https://api.usdiary.site/users/check-password', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, 
+        'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ password }), // 비밀번호 전송
+      body: JSON.stringify({ password }),
     });
 
     if (response.ok) {
-      navigate('/profilefix'); // 비밀번호가 맞으면 페이지 이동
-    } else {
-      setErrorMessage('비밀번호가 일치하지 않습니다.');
-    }
+      const responseData = await response.json();
+      if (responseData.message === "비밀번호가 일치합니다.") {
+        navigate('/profilefix');
+      }
+    } else if (response.status === 401) {
+        setErrorMessage('잘못된 비밀번호입니다.');
+      } else if (response.status === 404) {
+        setErrorMessage('사용자를 찾을 수 없습니다.');
+      } else {
+        setErrorMessage('서버 오류가 발생했습니다.');
+      }
   };
 
   if (!userData) {
-    return <div>Loading...</div>; // 사용자 데이터 로딩 중
+    return <div>Loading...</div>;
   }
 
   return (
-    <div className='wrap'>
+    <div className="wrap">
       <Menu />
-      <div className='profile'>
+
+      <div className="profile">
         <ProfileMenu />
         <div className="pro_content-box">
           <div className="pro_profile-section">
-            <div className="pro_profile-image-space">
-              {/* 프로필 이미지와 닉네임 표시 */}
-              <img
-                src={userData.profile_img || '/default-profile.png'}
-                alt="Profile"
-                className="pro_profile-img"
-              />
-              <p className="pro_profile-username">{userData.user_nick}</p>
-            </div>
-            <div className="pro_additional-circle"></div>
+            <div className="pro_profile-image-space"
+              style={{
+                backgroundImage: userData.profile_img ? `url(${userData.profile_img})` : `url(${BasicProfile})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            ></div>
+            <div class="pro_additional-circle"></div>
+            <p className="pro_profile-username">{userData.user_nick}</p>
             <div className="pro_password-container">
               <input
                 type="password"
@@ -103,13 +105,13 @@ const ProfilePage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              {errorMessage && <p className="pro_error-message">{errorMessage}</p>}
               <button className="pro_confirm-button" onClick={handleConfirm}>확인</button>
             </div>
+            {errorMessage && <p className="pro_error-message">{errorMessage}</p>}
           </div>
         </div>
       </div>
-    </div>
+      </div>
   );
 };
 

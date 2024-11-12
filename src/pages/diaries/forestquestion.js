@@ -49,28 +49,23 @@ const ForestQuestion = ({ onBack }) => {
     fetchTodayQuestion();
   }, [diary]);  
 
+
   useEffect(() => {
     const fetchTodayQuestion = async () => {
       try {
-        const response = await axios.get('https://api.usdiary.site/contents/questions/today');
-        setTodayQuestion(response.data.question);
-        setQuestionId(response.data.id);
-
-        // 기존 답변과 사진 가져오기
-        const answersResponse = await axios.get(`https://api.usdiary.site/questions/${response.data.id}/answers`);
-        const latestAnswer = answersResponse.data[0] || {};
-        setInitialAnswer(latestAnswer.answer_text || ''); // 변경된 변수
-        setInitialPhoto(latestAnswer.answer_photo || null); // 변경된 변수
-        setDiaryId(latestAnswer.diary_id || null);  // 변경된 변수
-
+        const response = await axios.get('https://api.usdiary.site/contents/questions/today', {
+          params: { date: new Date().toISOString().split('T')[0] }  // Format as YYYY-MM-DD
+        });
+        setTodayQuestion(response.data.data.question_text); // Assuming the question text is inside `data.question_text`
+        setQuestionId(response.data.data.question_id); // If question_id is needed
       } catch (error) {
-        console.error('Error fetching the question:', error);
-        setTodayQuestion('질문을 가져오는 데 실패했습니다.');
+        console.error('Error fetching today’s question:', error);
+        alert('질문을 불러오는 데 실패했습니다.');
       }
     };
-
     fetchTodayQuestion();
   }, []);
+
 
   const onChangeGetHTML = () => {
     if (editorRef.current) {
