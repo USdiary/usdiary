@@ -49,7 +49,7 @@ const ProfileFix = () => {
   // 개인정보 가져오기
   const fetchUserProfile = async (userId) => {
     try {
-      const response = await fetch(`/mypages/profiles/${userId}`);
+      const response = await fetch(`https://api.usdiary.site/mypages/profiles/${userId}`);
       const result = await response.json();
       if (response.ok) {
         setUserData(result.data);
@@ -95,7 +95,7 @@ const ProfileFix = () => {
 
       console.log('Updated data being sent:', updatedData);
 
-      const response = await fetch(`/mypages/profiles/${userId}`, {
+      const response = await fetch(`https://api.usdiary.site/mypages/profiles/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
