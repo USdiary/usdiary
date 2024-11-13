@@ -87,13 +87,26 @@ const SpecialDay = ({ onBack }) => {
               'Authorization': `Bearer ${token}`  // 토큰을 Authorization 헤더에 추가
             }
           });
-          const fetchedPlace = response.data;
-          setTodayPlace(fetchedPlace);
-          setSelectedIcon(iconMap[fetchedPlace.cate_num]);
-          setEmotion(fetchedPlace.diary_emotion);
-          setMemo(fetchedPlace.diary_memo);
+          const fetchedPlace = response.data.data[0];
+          if (fetchedPlace) {
+            console.log("fetchedPlace 전체 데이터:", fetchedPlace); // 전체 데이터를 콘솔에 출력
+            console.log("cate_num:", fetchedPlace.cate_num);
+            console.log("today_mood:", fetchedPlace.today_mood); // today_mood가 잘 불러와지는지 확인
+            console.log("place_memo:", fetchedPlace.place_memo)
+
+            setTodayPlace(fetchedPlace);
+            setSelectedIcon(iconMap[fetchedPlace.cate_num]);
+            setEmotion(fetchedPlace.today_mood);
+            setMemo(fetchedPlace.place_memo);
+          } else {
+            console.warn("해당 날짜에 대한 장소 데이터가 없습니다.");
+          }
         } catch (error) {
-          console.error('오늘의 장소를 불러오는 데 실패했습니다.', error);
+          if (error.response) {
+            console.error(`서버 오류 (상태 코드: ${error.response.status}):`, error.response.data);
+          } else {
+            console.error('네트워크 또는 다른 오류:', error.message);
+          }
         }
       } else {
         console.error('토큰이 존재하지 않습니다.');
@@ -103,7 +116,6 @@ const SpecialDay = ({ onBack }) => {
     fetchTodayPlace();
   }, []);
 
-
   const getIconClass = (cate_num) => {
     return `sea-popup__icon-${cate_num}`;
   };
@@ -112,7 +124,7 @@ const SpecialDay = ({ onBack }) => {
   const [place_id, setPlaceId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  const [categoryFilter, setCategoryFilter] = useState(null);
 
   const handleSave = async () => {
     const divNumbers = {
@@ -175,8 +187,24 @@ const SpecialDay = ({ onBack }) => {
     }
   };
 
-  const handleToggleDiv = (currentDiv, targetDiv) => {
-    setVisibleDiv(visibleDiv === currentDiv ? targetDiv : currentDiv);
+  // cate_num에 맞는 장소 필터링 함수
+  const filterPlacesByCateNum = (cateNum) => {
+    setCategoryFilter(cateNum);
+    const filtered = placeListData.filter(place => place.cate_num === cateNum);
+    setPlaces(filtered); // 필터링된 places 업데이트
+  };
+
+  // div 변경 함수 (필터링도 같이 처리)
+  const handleToggleDiv = (divName, cateNum) => {
+    setVisibleDiv(divName);
+    filterPlacesByCateNum(cateNum);
+  };
+
+  const handlePlaceClick = (place) => {
+    setTodayPlace(place); // 장소 데이터 저장
+    setSelectedIcon(iconMap[place.cate_num]); // 아이콘 설정
+    setEmotion(place.today_mood); // 감정 설정
+    setMemo(place.place_memo); // 메모 설정
   };
 
   // 자연 - 장소 이동 핸들러
@@ -186,28 +214,28 @@ const SpecialDay = ({ onBack }) => {
   const handleToggleDiv2 = () => handleToggleDiv('totalPlace', 'cityPlace');
 
   // 장소 - 바다 이동 핸들러
-  const handleToggleDiv3 = () => handleToggleDiv('naturePlace', 'sea');
+  const handleToggleDiv3 = () => handleToggleDiv('naturePlace', 'sea', 1);
 
   // 장소 - 산 이동 핸들러
-  const handleToggleDiv4 = () => handleToggleDiv('naturePlace', 'mountain');
+  const handleToggleDiv4 = () => handleToggleDiv('naturePlace', 'mountain', 2);
 
   // 장소 - 공원 이동 핸들러
-  const handleToggleDiv5 = () => handleToggleDiv('naturePlace', 'park');
+  const handleToggleDiv5 = () => handleToggleDiv('naturePlace', 'park', 3);
 
   // 장소 - 강 이동 핸들러
-  const handleToggleDiv6 = () => handleToggleDiv('naturePlace', 'river');
+  const handleToggleDiv6 = () => handleToggleDiv('naturePlace', 'river', 4);
 
   // 장소 - 하천 이동 핸들러
-  const handleToggleDiv7 = () => handleToggleDiv('naturePlace', 'stream');
+  const handleToggleDiv7 = () => handleToggleDiv('naturePlace', 'stream', 5);
 
   // 장소 - 계곡 이동 핸들러
-  const handleToggleDiv8 = () => handleToggleDiv('naturePlace', 'valley');
+  const handleToggleDiv8 = () => handleToggleDiv('naturePlace', 'valley', 6);
 
   // 장소 - 카페 이동 핸들러
-  const handleToggleDiv9 = () => handleToggleDiv('cityPlace', 'cafe');
+  const handleToggleDiv9 = () => handleToggleDiv('cityPlace', 'cafe', 7);
 
   // 장소 - 도서관 이동 핸들러
-  const handleToggleDiv10 = () => handleToggleDiv('cityPlace', 'library');
+  const handleToggleDiv10 = () => handleToggleDiv('cityPlace', 'library', 8);
 
   // 장소 - 식당 이동 핸들러
   const handleToggleDiv11 = () => handleToggleDiv('cityPlace', 'restaurant');
@@ -231,21 +259,21 @@ const SpecialDay = ({ onBack }) => {
   const handleToggleDiv17 = () => handleToggleDiv('cityPlace', 'auditorium');
 
   const placeListData = [
-    { visibleDiv: 'sea', image: seashell, title: '바다', imageId: 'seashell', category: 'naturePlace' },
-    { visibleDiv: 'mountain', image: umbrage, title: '산', imageId: 'umbrage', category: 'naturePlace' },
-    { visibleDiv: 'park', image: flower, title: '공원', imageId: 'flower', category: 'naturePlace' },
-    { visibleDiv: 'river', image: duck, title: '강', imageId: 'duck', category: 'naturePlace' },
-    { visibleDiv: 'stream', image: bicycle, title: '하천', imageId: 'bicycle', category: 'naturePlace' },
-    { visibleDiv: 'valley', image: watermelon, title: '계곡', imageId: 'watermelon', category: 'naturePlace' },
-    { visibleDiv: 'cafe', image: coffee, title: '카페', imageId: 'coffee', category: 'cityPlace' },
-    { visibleDiv: 'library', image: book, title: '도서관', imageId: 'book', category: 'cityPlace' },
-    { visibleDiv: 'restaurant', image: plate, title: '식당', imageId: 'plate', category: 'cityPlace' },
-    { visibleDiv: 'theater', image: film, title: '극장', imageId: 'film', category: 'cityPlace' },
-    { visibleDiv: 'gallery', image: palette, title: '미술관', imageId: 'palette', category: 'cityPlace' },
-    { visibleDiv: 'shoppingmall', image: shoppingbag, title: '쇼핑몰', imageId: 'shoppingbag', category: 'cityPlace' },
-    { visibleDiv: 'themepark', image: balloon, title: '테마파크', imageId: 'balloon', category: 'cityPlace' },
-    { visibleDiv: 'stadium', image: uniform, title: '경기장', imageId: 'uniform', category: 'cityPlace' },
-    { visibleDiv: 'auditorium', image: ticket, title: '공연장', imageId: 'ticket', category: 'cityPlace' }
+    { visibleDiv: 'sea', image: seashell, title: '바다', imageId: 'seashell', category: 'naturePlace', cate_num: 1 },
+    { visibleDiv: 'mountain', image: umbrage, title: '산', imageId: 'umbrage', category: 'naturePlace', cate_num: 2 },
+    { visibleDiv: 'park', image: flower, title: '공원', imageId: 'flower', category: 'naturePlace', cate_num: 3 },
+    { visibleDiv: 'river', image: duck, title: '강', imageId: 'duck', category: 'naturePlace', cate_num: 4 },
+    { visibleDiv: 'stream', image: bicycle, title: '하천', imageId: 'bicycle', category: 'naturePlace', cate_num: 5 },
+    { visibleDiv: 'valley', image: watermelon, title: '계곡', imageId: 'watermelon', category: 'naturePlace', cate_num: 6 },
+    { visibleDiv: 'cafe', image: coffee, title: '카페', imageId: 'coffee', category: 'cityPlace', cate_num: 7 },
+    { visibleDiv: 'library', image: book, title: '도서관', imageId: 'book', category: 'cityPlace', cate_num: 8 },
+    { visibleDiv: 'restaurant', image: plate, title: '식당', imageId: 'plate', category: 'cityPlace', cate_num: 9 },
+    { visibleDiv: 'theater', image: film, title: '극장', imageId: 'film', category: 'cityPlace', cate_num: 10 },
+    { visibleDiv: 'gallery', image: palette, title: '미술관', imageId: 'palette', category: 'cityPlace', cate_num: 11 },
+    { visibleDiv: 'shoppingmall', image: shoppingbag, title: '쇼핑몰', imageId: 'shoppingbag', category: 'cityPlace', cate_num: 12 },
+    { visibleDiv: 'themepark', image: balloon, title: '테마파크', imageId: 'balloon', category: 'cityPlace', cate_num: 13 },
+    { visibleDiv: 'stadium', image: uniform, title: '경기장', imageId: 'uniform', category: 'cityPlace', cate_num: 14 },
+    { visibleDiv: 'auditorium', image: ticket, title: '공연장', imageId: 'ticket', category: 'cityPlace', cate_num: 15 }
   ];
 
   const handleToggle = (divName) => () => {
@@ -265,6 +293,18 @@ const SpecialDay = ({ onBack }) => {
       }
     }
     onBack(); // 값이 없거나 '확인'을 누르면 onBack 실행
+  };
+
+  // 특정 카테고리 이동 핸들러를 선택하는 함수
+  const getCategoryHandler = (category) => {
+    switch (category) {
+      case 'naturePlace':
+        return handleToggleDiv1; // 자연 관련 이동 핸들러
+      case 'cityPlace':
+        return handleToggleDiv2; // 도시 관련 이동 핸들러
+      default:
+        return handleToggle; // 기본 핸들러
+    }
   };
 
   return (
@@ -368,11 +408,12 @@ const SpecialDay = ({ onBack }) => {
               visibleDiv === place.visibleDiv && (
                 <PlaceList
                   key={place.visibleDiv}
-                  places={places}
+                  places={places.filter((placeData) => placeData.visibleDiv === place.visibleDiv)}
                   image={place.image}
-                  handleToggle={handleToggle(place.category)}
+                  handleToggle={getCategoryHandler(place.category)}
                   title={place.title}
                   imageId={place.imageId}
+                  onPlaceClick={handlePlaceClick}
                 />
               )
             )}
