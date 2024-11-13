@@ -288,8 +288,8 @@ const SpecialDay = ({ onBack }) => {
           <div className='sea-popup__container' style={{ boxShadow: 'none', marginBottom: '5px', height: '400px' }}>
             <img src={selectedIcon} alt="Category Icon" className={`sea-popup__category-icon ${getIconClass(todayPlace.cate_num)}`} />
             <div className="sea-popup__icon-text">
-              <div className="sea-popup__icon-emotion">{todayPlace.diary_emotion}</div>
-              <div className="sea-popup__icon-memo">{todayPlace.diary_memo}</div>
+              <div className="sea-popup__icon-emotion">{diary_emotion}</div>
+              <div className="sea-popup__icon-memo">{diary_memo}</div>
             </div>
           </div>
         ) : (

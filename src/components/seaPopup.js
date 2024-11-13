@@ -102,6 +102,39 @@ const SeaPopup = ({ diary_id, onClose }) => {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
+        const fetchTodayPlace = async () => {
+            const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식으로 현재 날짜 가져오기
+            if (token) {
+                try {
+                    const response = await axios.get(`https://api.usdiary.site/contents/places`, {
+                        params: { date: currentDate },
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const fetchedPlace = response.data.data[0];
+                    if (fetchedPlace) {
+                        console.log("fetchedPlace 전체 데이터:", fetchedPlace); // 전체 데이터를 콘솔에 출력
+                        console.log("cate_num:", fetchedPlace.cate_num);
+                        console.log("today_mood:", fetchedPlace.today_mood); // today_mood가 잘 불러와지는지 확인
+                        console.log("place_memo:", fetchedPlace.place_memo);
+
+                        setTodayPlace(fetchedPlace);
+                        setSelectedIcon(iconMap[fetchedPlace.cate_num]);
+                    } else {
+                        console.warn("해당 날짜에 대한 장소 데이터가 없습니다.");
+                    }
+                } catch (error) {
+                    console.error('오늘의 장소를 불러오는 데 실패했습니다.', error);
+                }
+            } else {
+                console.error('토큰이 존재하지 않습니다.');
+            }
+        };
+
+        fetchTodayPlace();
+    }, []);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
         const fetchDiaryData = async () => {
             setDiaryLoading(true);
             try {
@@ -381,7 +414,7 @@ const SeaPopup = ({ diary_id, onClose }) => {
                                 <div className='sea-popup__container'>
                                     <img src={selectedIcon} alt="Category Icon" className={`sea-popup__category-icon ${getIconClass(todayPlace.cate_num)}`} />
                                     <div className="sea-popup__icon-text">
-                                        <div className="sea-popup__icon-emotion">{todayPlace?.today_mood}</div>
+                                        <div className="sea-popup__icon-emotion">{todayPlace.today_mood}</div>
                                         <div className="sea-popup__icon-memo">{todayPlace.place_memo}</div>
                                     </div>
                                 </div>
