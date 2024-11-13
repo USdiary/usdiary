@@ -8,17 +8,17 @@ import moonerphoto3 from '../../../assets/images/moonerphoto3.jpg';
 const RequestMooner = ({ onClose }) => {
     const [entireUsers, setEntireUsers] = useState([
         {
-            id: 1,
+            id: Sohee1122,
             nickname: "또리",
             image: moonerphoto1,
         },
         {
-            id: 2,
+            id: WonBin22,
             nickname: "비니",
             image: moonerphoto2,
         },
         {
-            id: 3,
+            id: Freshboyy,
             nickname: "우낙",
             image: moonerphoto3,
         },
