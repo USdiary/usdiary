@@ -268,10 +268,6 @@
     align-items: flex-start;
 }
 
-.sea-popup__main-content--centered {
-    justify-content: center; /* 가운데 정렬 */
-}
-
 .sea-popup__place-section {
     display: flex;
     flex-direction: column;

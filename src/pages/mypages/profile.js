@@ -95,7 +95,7 @@ const ProfilePage = () => {
                 backgroundPosition: 'center',
               }}
             ></div>
-            <div class="pro_additional-circle"></div>
+            <div className="pro_additional-circle"></div>
             <p className="pro_profile-username">{userData.user_nick}</p>
             <div className="pro_password-container">
               <input
