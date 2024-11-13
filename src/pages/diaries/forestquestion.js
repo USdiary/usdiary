@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 import TodayQuestionPopup from "./todayQuestionPopup";
 
@@ -11,53 +12,62 @@ const ForestQuestion = ({ onBack }) => {
   const { diary } = location.state || {};
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [title, setTitle] = useState('');
-  const [editorData, setEditorData] = useState('');
-  const [selectedDiv, setSelectedDiv] = useState(0);
   const [showTodayQuestionPopup, setShowTodayQuestionPopup] = useState(false);
   const [todayQuestionContent, setTodayQuestionContent] = useState('');
   const [todayQuestion, setTodayQuestion] = useState('Question');
   const [question_id, setQuestionId] = useState(null);
   const [initialAnswer, setInitialAnswer] = useState('');
   const [initialPhoto, setInitialPhoto] = useState(null);
-  const [diary_id, setDiaryId] = useState(null);  // 변경된 변수
   const editorRef = useRef();
 
-  useEffect(() => {
-    const fetchTodayQuestion = async () => {
-      if (diary && diary.diary_id) {
-        try {
-          // 질문 데이터 가져오기
-          const questionResponse = await axios.get(`https://api.usdiary.site/questions/${diary.diary_id}`);
-          setTodayQuestion(questionResponse.data.question_text); // question_text로 설정
-          setQuestionId(questionResponse.data.question_id); // question_id 설정
-  
-          // 답변 데이터 가져오기
-          const answerResponse = await axios.get(`https://api.usdiary.site/contents/questions/${questionResponse.data.question_id}/answers/${diary.diary_id}`);
-          setInitialAnswer(answerResponse.data.answer_text || ''); 
-          setInitialPhoto(answerResponse.data.answer_photo || null);
-          setDiaryId(answerResponse.data.diary_id || null);
-        } catch (error) {
-          console.error('Error fetching the question or answer:', error);
-          setTodayQuestion('질문을 가져오는 데 실패했습니다.');
-          setInitialAnswer('');
-          setInitialPhoto(null);
-        }
-      }
-    };
-  
-    fetchTodayQuestion();
-  }, [diary]);  
+  const fetchAnswerByDate = async (date) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error("No token found in localStorage.");
+      return;
+    }
 
+    try {
+      // JWT 토큰 디코딩
+      const decodedToken = jwtDecode(token);
+      const signId = decodedToken.sign_id; // sign_id 추출
+
+      const response = await axios.get('https://api.usdiary.site/contents/myanswers', {
+        params: { date, sign_id: signId },  // sign_id를 포함하여 요청
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const answerData = response.data.data || {};
+      setInitialAnswer(answerData.answer_text || '');
+      setInitialPhoto(answerData.answer_photo || null);
+    } catch (error) {
+      console.error('Error fetching answer by date:', error);
+      alert('답변을 조회하는 데 실패했습니다.');
+    }
+  };
+
+  useEffect(() => {
+    const formattedDate = new Date(selectedDate.getTime() + 9 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0]; // 한국 시간 (UTC+9)으로 변환하여 날짜 포맷
+    fetchAnswerByDate(formattedDate);
+  }, [selectedDate]);
 
   useEffect(() => {
     const fetchTodayQuestion = async () => {
       try {
+        const formattedDate = new Date(new Date().getTime() + 9 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0]; // 한국 시간 (UTC+9)으로 변환하여 날짜 포맷
+
         const response = await axios.get('https://api.usdiary.site/contents/questions/today', {
-          params: { date: new Date().toISOString().split('T')[0] }  // Format as YYYY-MM-DD
+          params: { date: formattedDate }
         });
-        setTodayQuestion(response.data.data.question_text); // Assuming the question text is inside `data.question_text`
-        setQuestionId(response.data.data.question_id); // If question_id is needed
+
+        const questionData = response.data.data || {};
+        setTodayQuestion(questionData.question_text || '');
+        setQuestionId(questionData.question_id || null);
       } catch (error) {
         console.error('Error fetching today’s question:', error);
         alert('질문을 불러오는 데 실패했습니다.');
@@ -66,85 +76,20 @@ const ForestQuestion = ({ onBack }) => {
     fetchTodayQuestion();
   }, []);
 
-
-  const onChangeGetHTML = () => {
-    if (editorRef.current) {
-      const data = editorRef.current.getInstance().getHTML();
-      setEditorData(data);
-    }
-  };
-
-  const handleSubmit = async () => {
-    try {
-      await axios.post('https://api.usdiary.site/questions', {
-        title,
-        content: editorData,
-        date: selectedDate.toISOString(),
-        visibility: selectedDiv,
-        user_id: diary.user_id
-      });
-
-      alert('문서가 성공적으로 발행되었습니다.');
-    } catch (error) {
-      console.error('Error submitting the question:', error);
-      alert('문서 발행에 실패했습니다.');
-    }
-  };
-
-  const handleUpdateQuestion = async () => {
-    try {
-      await axios.patch(`https://api.usdiary.site/questions/${question_id}`, {
-        title,
-        content: editorData,
-      });
-
-      alert('질문이 성공적으로 수정되었습니다.');
-    } catch (error) {
-      console.error('Error updating the question:', error);
-      alert('질문 수정에 실패했습니다.');
-    }
-  };
-
-  const handleDeleteQuestion = async () => {
-    try {
-      await axios.delete(`https://api.usdiary.site/questions/${question_id}`);
-
-      alert('질문이 성공적으로 삭제되었습니다.');
-    } catch (error) {
-      console.error('Error deleting the question:', error);
-      alert('질문 삭제에 실패했습니다.');
-    }
-  };
-
-  const handleUpdateAnswer = async () => {
-    try {
-      const formData = new FormData();
-      formData.append('answer_text', initialAnswer);  // 변경된 변수
-      if (initialPhoto) {
-        formData.append('answer_photo', initialPhoto);  // 변경된 변수
-      }
-
-      await axios.patch(`https://api.usdiary.site/contents/questions/${question_id}/answers/${diary_id}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      alert('답변이 성공적으로 수정되었습니다.');
-    } catch (error) {
-      console.error('Error updating the answer:', error);
-      alert('답변 수정에 실패했습니다.');
-    }
-  };
-
   const handleDeleteAnswer = async () => {
     try {
-      await axios.delete(`https://api.usdiary.site/contents/questions/${question_id}/answers/${diary_id}`);  // 변경된 API 경로
-
-      alert('답변이 성공적으로 삭제되었습니다.');
+      await axios.delete(`https://api.usdiary.site/contents/answers`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        params: { date: selectedDate.toISOString().split('T')[0] }
+      });
+      // 삭제 후 답변을 비우고 상태를 업데이트
+      setInitialAnswer('');
+      setInitialPhoto(null);
     } catch (error) {
+      // 삭제 실패 시 아무것도 하지 않음
       console.error('Error deleting the answer:', error);
-      alert('답변 삭제에 실패했습니다.');
     }
   };
 
@@ -178,23 +123,13 @@ const ForestQuestion = ({ onBack }) => {
     };
   }, [showTodayQuestionPopup]);
 
-  const handleTodayQuestionButtonClick = () => {
-    setShowTodayQuestionPopup(true);
-  };
-
   const handleTodayQuestionPopupClose = () => {
     setShowTodayQuestionPopup(false);
-    setInitialAnswer('');
-    setInitialPhoto(null);
+    fetchAnswerByDate(selectedDate.toISOString().split('T')[0]);
   };
 
-  const handleSaveAnswer = () => {
-    handleTodayQuestionPopupClose();
-  };
-
-  const handleDeleteAnswerFromPopup = () => {
-    handleDeleteAnswer();
-    handleTodayQuestionPopupClose();
+  const handleTodayQuestionButtonClick = () => {
+    setShowTodayQuestionPopup(true);
   };
 
   return (
@@ -230,7 +165,7 @@ const ForestQuestion = ({ onBack }) => {
           question_id={question_id}
           initialAnswer={initialAnswer}
           initialPhoto={initialPhoto}
-          onClose={() => setShowTodayQuestionPopup(false)}
+          onClose={handleTodayQuestionPopupClose}
           onDelete={handleDeleteAnswer}
         />
       )}

@@ -19,6 +19,8 @@ const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nic
             }
         };
         fetchLikeStatus();
+
+        setLiked(false);
     }, [diary_id, user_id]);
 
     const formatDate = (date) => {
@@ -32,18 +34,9 @@ const DiaryCard = ({ diary_title, createdAt, diary_content, post_photo, user_nic
     const formattedDate = formatDate(createdAt);
 
     // 좋아요 토글 함수
-    const toggleLike = async (e) => {
+    const toggleLike = (e) => {
         e.stopPropagation();
-        try {
-            // 서버로 좋아요 상태 전송
-            const response = await axios.post(`/diaries/${diary_id}/like`, { liked: !liked });
-            if (response.status === 200) {
-                // 좋아요 상태 변경 및 좋아요 개수 업데이트
-                setLiked(!liked);
-            }
-        } catch (error) {
-            console.error('Failed to update like status', error);
-        }
+        setLiked(!liked);
     };
 
     const EmptyHeart = () => (
