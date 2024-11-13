@@ -32,22 +32,18 @@ const ForestQuestion = ({ onBack }) => {
       const decodedToken = jwtDecode(token); 
       const signId = decodedToken.sign_id; // sign_id 추출
   
-      const response = await axios.get('https://api.usdiary.site/contents/answers', {
+      const response = await axios.get('https://api.usdiary.site/contents/myanswers', {
         params: { date, sign_id: signId },  // sign_id를 포함하여 요청
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-  
-      setInitialAnswer(response.data.data.answer_text || '');
-      setInitialPhoto(response.data.data.answer_photo || null);
+      const answerData = response.data.data || {};
+      setInitialAnswer(answerData.answer_text || '');
+      setInitialPhoto(answerData.answer_photo || null);
     } catch (error) {
       console.error('Error fetching answer by date:', error);
-      if (error.response && error.response.status === 404) {
-        alert('해당 날짜의 답변을 찾을 수 없습니다.');
-      } else {
-        alert('답변을 조회하는 데 실패했습니다.');
-      }
+      alert('답변을 조회하는 데 실패했습니다.');
     }
   };
 
@@ -62,8 +58,9 @@ const ForestQuestion = ({ onBack }) => {
         const response = await axios.get('https://api.usdiary.site/contents/questions/today', {
           params: { date: new Date().toISOString().split('T')[0] }  // Format as YYYY-MM-DD
         });
-        setTodayQuestion(response.data.data.question_text); // Assuming the question text is inside `data.question_text`
-        setQuestionId(response.data.data.question_id); // If question_id is needed
+        const questionData = response.data.data || {};
+        setTodayQuestion(questionData.question_text || '');
+        setQuestionId(questionData.question_id || null);
       } catch (error) {
         console.error('Error fetching today’s question:', error);
         alert('질문을 불러오는 데 실패했습니다.');
