@@ -78,7 +78,7 @@
 }
 
 .mooner-popup-profile_friend_btn {
-    width: 82px;
+    width: 100px;
     height: 40px;
     background-color: #9FC393;
     color: #ffffff;
@@ -119,4 +119,10 @@
 .mooner-popup-profile_pins_diaries .diary-card {
     width: 230px;
     box-sizing: border-box;
+}
+
+.mooner-popup-profile_pins_diaries .diary-card {
+    width: 230px;
+    box-sizing: border-box;
+    border: 1px solid #9FC393; /* 테두리 색상과 두께 설정 */
 }

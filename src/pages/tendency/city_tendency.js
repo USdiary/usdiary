@@ -103,7 +103,7 @@ function CityTendency() {
           <div className="city_tendency_info-box">
             <div className="city_tendency_info-content">
               <div className="city_tendency_info-header">
-                <h1>{userNick}님은 도시 성향이에요</h1> {/* userNick 상태를 사용하여 닉네임 표시 */}
+                <h1>{userNick}님은 도시 성향이에요</h1> 
               </div>
               <div className="city_tendency_info-section">
                 <h2>도시란?</h2>
