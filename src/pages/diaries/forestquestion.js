@@ -26,12 +26,12 @@ const ForestQuestion = ({ onBack }) => {
       console.error("No token found in localStorage.");
       return;
     }
-  
+
     try {
       // JWT 토큰 디코딩
-      const decodedToken = jwtDecode(token); 
+      const decodedToken = jwtDecode(token);
       const signId = decodedToken.sign_id; // sign_id 추출
-  
+
       const response = await axios.get('https://api.usdiary.site/contents/myanswers', {
         params: { date, sign_id: signId },  // sign_id를 포함하여 요청
         headers: {
@@ -48,16 +48,23 @@ const ForestQuestion = ({ onBack }) => {
   };
 
   useEffect(() => {
-    const formattedDate = selectedDate.toISOString().split('T')[0];
+    const formattedDate = new Date(selectedDate.getTime() + 9 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0]; // 한국 시간 (UTC+9)으로 변환하여 날짜 포맷
     fetchAnswerByDate(formattedDate);
   }, [selectedDate]);
 
   useEffect(() => {
     const fetchTodayQuestion = async () => {
       try {
+        const formattedDate = new Date(new Date().getTime() + 9 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0]; // 한국 시간 (UTC+9)으로 변환하여 날짜 포맷
+
         const response = await axios.get('https://api.usdiary.site/contents/questions/today', {
-          params: { date: new Date().toISOString().split('T')[0] }  // Format as YYYY-MM-DD
+          params: { date: formattedDate }
         });
+
         const questionData = response.data.data || {};
         setTodayQuestion(questionData.question_text || '');
         setQuestionId(questionData.question_id || null);

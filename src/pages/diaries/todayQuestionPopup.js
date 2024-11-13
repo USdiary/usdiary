@@ -64,7 +64,7 @@ const TodayQuestionPopup = ({ onClose, question_id, initialAnswer, initialPhoto,
         const todayDate = new Date().toISOString().split('T')[0];
         
         // 특정 날짜의 답변을 조회하는 GET 요청
-        const response = await axios.get('https://api.usdiary.site/contents/answers', {
+        const response = await axios.get('https://api.usdiary.site/contents/myanswers', {
           params: { date: todayDate, sign_id: signId }, // sign_id 추가
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -90,7 +90,7 @@ const TodayQuestionPopup = ({ onClose, question_id, initialAnswer, initialPhoto,
     fetchTodayAnswer();
   }, [signId]);
 
-  
+
   const handleSave = async () => {
     try {
       const date = new Date().toISOString().split('T')[0];
@@ -112,7 +112,7 @@ const TodayQuestionPopup = ({ onClose, question_id, initialAnswer, initialPhoto,
         alert('답변이 성공적으로 수정되었습니다.');
       } else {
         // 답변이 존재하지 않으면 POST 요청을 통해 새로 생성
-        const response = await axios.post('https://api.usdiary.site/contents/answers', payload, {
+        const response = await axios.post('https://api.usdiary.site/contents/myanswers', payload, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
