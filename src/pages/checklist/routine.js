@@ -157,6 +157,7 @@ const Routine = ({ onClose, onArrowClick, onSubmit }) => {
       // 새로운 루틴을 서버에 추가
       const createdRoutines = await Promise.all(newRoutinesPromises);
       console.log("새 루틴 추가 성공:", createdRoutines.map((res) => res.data));
+      alert("루틴이 저장되었습니다");
     } catch (error) {
       console.error("루틴 저장 중 오류 발생:", error);
     }
