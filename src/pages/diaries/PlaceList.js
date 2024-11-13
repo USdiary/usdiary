@@ -26,7 +26,7 @@ const PlaceList = ({ places, image, handleToggle, title, imageId }) => {
               ) : null
             )
           ) : (
-            <div>No places available.</div> // places가 없을 때 보여줄 메시지
+            <div></div>
           )}
         </div>
         <div className="specialDay-choice3-places-right">
@@ -43,7 +43,7 @@ const PlaceList = ({ places, image, handleToggle, title, imageId }) => {
               ) : null
             )
           ) : (
-            <div>No places available.</div> // places가 없을 때 보여줄 메시지
+            <div></div>
           )}
         </div>
       </div>
