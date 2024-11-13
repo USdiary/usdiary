@@ -86,32 +86,36 @@ const CityPopup = ({ diary_id, onClose }) => {
         fetchDiaryData();
     }, [diary_id]);
 
-    // 할 일 데이터 가져오기
+
     useEffect(() => {
         const fetchTodoData = async () => {
             const token = localStorage.getItem('token');
+            
+            // 오늘 날짜를 기본값으로 설정 (한국 시간 기준)
+            const today = new Date(new Date().getTime() + 9 * 60 * 60 * 1000)
+                .toISOString()
+                .split('T')[0]; // YYYY-MM-DD 형식으로 변환
+            
+            // 날짜가 주어지지 않으면 오늘 날짜를 기본값으로 사용
+            const queryDate = diary_id ? today : diary_id;
     
             try {
-                const response = await axios.get(`https://api.usdiary.site/contents/${diary_id}/todos`, {
+                const response = await axios.get('https://api.usdiary.site/contents/todos', {
+                    params: { date: queryDate },  // date 파라미터 추가
                     headers: token ? { Authorization: `Bearer ${token}` } : {},
                 });
     
-                const data = response.data?.data || [];  // 빈 배열 처리
-                setTodos(data);  // 빈 배열일 경우에도 상태 업데이트
+                const data = response.data?.data || []; // 데이터가 없으면 빈 배열 처리
+                setTodos(data);  // 루틴 데이터 설정
                 console.log('Todo Data:', data);
-    
-                if (data.length === 0) {
-                    setError('할 일이 없습니다.');
-                }
             } catch (error) {
-                const message = error.response?.data?.error ||  // 서버에서 반환하는 오류 메시지 확인
-                    (error.code === 'ECONNABORTED'
-                        ? '서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.'
-                        : (error.response?.status === 404
-                            ? '할 일을 찾을 수 없습니다.'
-                            : '할 일 데이터를 불러오는 데 실패했습니다.'));
+                const message = error.code === 'ECONNABORTED'
+                    ? '서버 응답이 지연되었습니다. 잠시 후 다시 시도해주세요.'
+                    : (error.response?.status === 404
+                        ? '루틴을 찾을 수 없습니다.'
+                        : '루틴 데이터를 불러오는 데 실패했습니다.');
                 setError(message);
-                console.error('Error fetching todo:', error.response?.data || error.message);
+                console.error('Error fetching routine:', error.response?.data || error.message);
             } finally {
                 setLoading(false);
             }
@@ -124,18 +128,23 @@ const CityPopup = ({ diary_id, onClose }) => {
     useEffect(() => {
         const fetchRoutineData = async () => {
             const token = localStorage.getItem('token');
+            
+            // 오늘 날짜를 기본값으로 설정 (한국 시간 기준)
+            const today = new Date(new Date().getTime() + 9 * 60 * 60 * 1000)
+                .toISOString()
+                .split('T')[0]; // YYYY-MM-DD 형식으로 변환
+            
+            // 날짜가 주어지지 않으면 오늘 날짜를 기본값으로 사용
+            const queryDate = diary_id ? today : diary_id;
     
             try {
-                const response = await axios.get(`https://api.usdiary.site/contents/${diary_id}/routines`, {
+                const response = await axios.get('https://api.usdiary.site/contents/routines', {
+                    params: { date: queryDate },  // date 파라미터 추가
                     headers: token ? { Authorization: `Bearer ${token}` } : {},
                 });
     
-                const data = response.data?.data || null; // 데이터가 없으면 null 처리
-                if (data) {
-                    setTodos([data]);  // 단일 객체인 경우 배열로 감싸서 상태 설정
-                } else {
-                    setTodos([]); // 데이터가 없을 경우 빈 배열
-                }
+                const data = response.data?.data || []; // 데이터가 없으면 빈 배열 처리
+                setRoutines(data);  // 루틴 데이터 설정
                 console.log('Routine Data:', data);
             } catch (error) {
                 const message = error.code === 'ECONNABORTED'
@@ -152,6 +161,7 @@ const CityPopup = ({ diary_id, onClose }) => {
     
         fetchRoutineData();
     }, [diary_id]);
+    
     
 
 
@@ -424,15 +434,15 @@ const CityPopup = ({ diary_id, onClose }) => {
                                 <h2 className="city-popup__checklist-title">Today's Checklist</h2>
                                 <div className="city-popup__checklist__check-routine">
                                     <div className="city-popup__checklist__check-routine-top">
-                                        <div className="city__checklist__check-routine-top-circle"></div>
-                                        <div className="city__checklist__check-routine-top-name">Routine</div>
-                                        <div className="city__checklist__check-routine-top-num">{routines?.length}</div>
+                                        <div className="checklist-routine-top-circle"></div>
+                                        <div className="checklist-routine-top-name">Routine</div>
+                                        <div className="checklist-routine-top-num">{routines?.length}</div>
                                     </div>
                                     <hr />
                                     <div className="city-popup__checklist__check-routine-bottom">
                                         {routines.map((routine, index) => (
-                                            <div className="city__checklist__check-routine-bottom-box" key={routine.routine_id}>
-                                                <div className="city__checklist__check-routine-bottom-box-toggleSwitch">
+                                            <div className="checklist-routine-bottom-box" key={routine.routine_id}>
+                                                <div className="checklist-routine-bottom-box-toggleSwitch">
                                                     <input
                                                         type="checkbox"
                                                         id={`routine-toggle-${index}`}
@@ -444,23 +454,23 @@ const CityPopup = ({ diary_id, onClose }) => {
                                                         <span></span>
                                                     </label>
                                                 </div>
-                                                <div className="city__checklist__check-routine-bottom-box-title">{routine.title}</div>
-                                                <div className="city__checklist__check-routine-bottom-box-content">{routine.description}</div>
+                                                <div className="checklist-routine-bottom-box-title">{routine.routine_title}</div>
+                                                <div className="checklist-routine-bottom-box-content">{routine.description}</div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                                 <div className="city-popup__checklist__check-todo">
                                     <div className="city-popup__checklist__check-todo-top">
-                                        <div className="city__checklist__check-todo-top-circle"></div>
-                                        <div className="city__checklist__check-todo-top-name">To Do</div>
-                                        <div className="city__checklist__check-todo-top-num">{todos.length}</div>
+                                        <div className="checklist-todo-top-circle"></div>
+                                        <div className="checklist-todo-top-name">To Do</div>
+                                        <div className="checklist-todo-top-num">{todos?.length}</div>
                                     </div>
                                     <hr />
                                     <div className="city-popup__checklist__check-todo-bottom">
                                         {todos.map((todo, index) => (
-                                            <div className="city__checklist__check-todo-bottom-box" key={todo.todo_id}>
-                                                <div className="city__checklist__check-todo-bottom-box-toggleSwitch">
+                                            <div className="checklist-todo-bottom-box" key={todo.todo_id}>
+                                                <div className="checklist-todo-bottom-box-toggleSwitch">
                                                     <input
                                                         type="checkbox"
                                                         id={`todo-toggle-${index}`}
@@ -472,8 +482,8 @@ const CityPopup = ({ diary_id, onClose }) => {
                                                         <span></span>
                                                     </label>
                                                 </div>
-                                                <div className="city__checklist__check-todo-bottom-box-title">{todo.title}</div>
-                                                <div className="city__checklist__check-todo-bottom-box-content">{todo.description}</div>
+                                                <div className="checklist-todo-bottom-box-title">{todo.todo_title}</div>
+                                                <div className="checklist-todo-bottom-box-content">{todo.description}</div>
                                             </div>
                                         ))}
                                     </div>
