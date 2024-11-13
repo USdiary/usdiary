@@ -87,11 +87,20 @@ const SpecialDay = ({ onBack }) => {
               'Authorization': `Bearer ${token}`  // 토큰을 Authorization 헤더에 추가
             }
           });
-          const fetchedPlace = response.data;
-          setTodayPlace(fetchedPlace);
-          setSelectedIcon(iconMap[fetchedPlace.cate_num]);
-          setEmotion(fetchedPlace.diary_emotion);
-          setMemo(fetchedPlace.diary_memo);
+          const fetchedPlace = response.data.data[0];
+          if (fetchedPlace) {
+            console.log("fetchedPlace 전체 데이터:", fetchedPlace); // 전체 데이터를 콘솔에 출력
+            console.log("cate_num:", fetchedPlace.cate_num);
+            console.log("today_mood:", fetchedPlace.today_mood); // today_mood가 잘 불러와지는지 확인
+            console.log("place_memo:", fetchedPlace.place_memo)
+
+            setTodayPlace(fetchedPlace);
+            setSelectedIcon(iconMap[fetchedPlace.cate_num]);
+            setEmotion(fetchedPlace.today_mood);
+            setMemo(fetchedPlace.place_memo);
+          } else {
+            console.warn("해당 날짜에 대한 장소 데이터가 없습니다.");
+          }
         } catch (error) {
           console.error('오늘의 장소를 불러오는 데 실패했습니다.', error);
         }

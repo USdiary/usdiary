@@ -1,12 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import '../../../assets/css/follow.css';
-
 import exit from '../../../assets/images/exit.png';
+import moonerphoto1 from '../../../assets/images/moonerphoto1.jpg';
+import moonerphoto2 from '../../../assets/images/moonerphoto2.jpg';
+import moonerphoto3 from '../../../assets/images/moonerphoto3.jpg';
 
 const RequestMooner = ({ onClose }) => {
-    const [entireUsers, setEntireUsers] = useState([]);
+    const [entireUsers, setEntireUsers] = useState([
+        {
+            id: 1,
+            nickname: "또리",
+            image: moonerphoto1,
+        },
+        {
+            id: 2,
+            nickname: "비니",
+            image: moonerphoto2,
+        },
+        {
+            id: 3,
+            nickname: "우낙",
+            image: moonerphoto3,
+        },
+    ]);
 
+    /*
     useEffect(() => {
         axios.get('https://api.usdiary.site/friends/follow-request/handle')
             .then((response) => {
@@ -16,33 +34,18 @@ const RequestMooner = ({ onClose }) => {
                 console.error('Error fetching follow requests:', error);
             });
     }, []);
-    
+    */
+
     const handleAccept = (user) => {
-        axios.post('https://api.usdiary.site/friends/follow-request/handle', {
-            follower_sign_id: user.id,
-            action: 'accepted',
-        })
-        .then((response) => {
-            setEntireUsers(prevUsers => prevUsers.filter(u => u.id !== user.id));
-        })
-        .catch((error) => {
-            console.error('Error accepting follow request:', error);
-        });
+        setEntireUsers((prevUsers) => prevUsers.filter((u) => u.id !== user.id));
+        console.log(`${user.nickname} 님의 요청을 수락했습니다.`);
     };
-    
+
     const handleRefuse = (user) => {
-        axios.post('https://api.usdiary.site/friends/follow-request/handle', {
-            follower_sign_id: user.id,
-            action: 'refused',
-        })
-        .then((response) => {
-            setEntireUsers(prevUsers => prevUsers.filter(u => u.id !== user.id));
-        })
-        .catch((error) => {
-            console.error('Error refusing follow request:', error);
-        });
+        setEntireUsers((prevUsers) => prevUsers.filter((u) => u.id !== user.id));
+        console.log(`${user.nickname} 님의 요청을 거절했습니다.`);
     };
-    
+
     return (
         <div className="mooner_popup-overlay">
             <div className="mooner_popup-content">

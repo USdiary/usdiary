@@ -4,16 +4,18 @@ import guide1 from '../../src/assets/images/guide1.png';
 import guide2 from '../../src/assets/images/guide2.png';
 import guide3 from '../../src/assets/images/guide3.png';
 
-const GuidePopup = ({ lastLogin }) => {
+const GuidePopup = () => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isOpen, setIsOpen] = useState(false); 
     const images = [guide1, guide2, guide3];
 
     useEffect(() => {
-        if (!lastLogin) {
+        // 로컬 스토리지에서 'guide_closed' 상태 확인
+        const isGuideClosed = localStorage.getItem('guide_closed');
+        if (!isGuideClosed) {
             setIsOpen(true);
         }
-    }, [lastLogin]);
+    }, []);
 
     const handleNext = () => {
         setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -25,8 +27,8 @@ const GuidePopup = ({ lastLogin }) => {
 
     const handleClose = () => {
         setIsOpen(false);
-        // last_login 값을 업데이트 
-        localStorage.setItem('last_login', new Date().toISOString()); 
+        // 팝업이 닫히면 로컬 스토리지에 '닫힘' 상태 저장
+        localStorage.setItem('guide_closed', 'true');
     };
 
     if (!isOpen) return null;
