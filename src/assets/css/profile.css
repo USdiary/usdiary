@@ -6,9 +6,9 @@
   box-sizing: border-box;
 }
 
-.pro_page .pro_page-container{
+.pro_page .pro_page-container {
   display: flex;
-  width: 100%px;
+  width: 100%;
   margin: 38px 40px 0px 40px;
   border-radius: 15px;
   background-image: linear-gradient(rgb(206, 224, 200), rgb(255, 255, 255) 160px);
@@ -45,7 +45,8 @@
 }
 
 .pro_page .profile-menu_content:hover img {
-  filter: invert(36%) sepia(11%) saturate(811%) hue-rotate(178deg) brightness(52%) contrast(91%); /* hover 상태일 때 이미지 색상 */
+  filter: invert(36%) sepia(11%) saturate(811%) hue-rotate(178deg) brightness(52%) contrast(91%);
+  /* hover 상태일 때 이미지 색상 */
 }
 
 .pro_page .profile-menu_content.active {
@@ -57,7 +58,8 @@
 }
 
 .pro_page .profile-menu_content.active .profile-menu_content_name {
-  color: #ffffff; /* active 상태일 때 이름 색상 */
+  color: #ffffff;
+  /* active 상태일 때 이름 색상 */
 }
 
 .pro_page .profile-menu_content_img {
@@ -73,7 +75,8 @@
 }
 
 .pro_page .profile-menu_content.active {
-  background-color: #545F71; /* 선택된 메뉴 아이템의 배경 색상 */
+  background-color: #545F71;
+  /* 선택된 메뉴 아이템의 배경 색상 */
 }
 
 .pro_page .profile-menu_content_name {
@@ -81,10 +84,10 @@
 }
 
 .pro_content-box {
-  flex-grow: 1;
-  display: flex;
-  justify-content: center;
   align-items: center;
+  display: flex;
+  flex-grow: 1;
+  justify-content: center;
   margin-top: 100px;
 }
 
@@ -122,22 +125,23 @@
 }
 
 .pro_password-container {
-  display: flex;
   align-items: center;
-  gap: 10px; /* 입력창과 버튼 사이의 간격 */
-  justify-content: center;
-  margin-top: 40px;
+  display: flex;
+  gap: 10px;
 }
 
 .pro_password-input {
-  width: 250px; /* 버튼과 나란히 배치되도록 약간 좁힘 */
-  height: 40px;
   border: 1px solid #ccc;
   border-radius: 5px;
   box-sizing: border-box;
-  font-weight: normal;
+  font-weight: 400;
+  height: 40px;
+  margin-left: 80px;
+  margin-top: 60px;
   outline: none;
-  transition: border-color 0.3s ease;
+  padding: 20px;
+  transition: border-color .3s ease;
+  width: 400px;
 }
 
 .pro_password-input:focus {
@@ -146,16 +150,17 @@
 }
 
 .pro_confirm-button {
-  padding: 0 20px;
-  background-color: #9FC393;
-  border: none;
-  color: white;
-  cursor: pointer;
-  border-radius: 5px;
-  height: 40px;
-  display: flex;
   align-items: center;
+  background-color: #9fc393;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  height: 40px;
   justify-content: center;
+  margin-top: 60px;
+  padding: 20px;
 }
 
 .pro_confirm-button:hover {
@@ -163,8 +168,12 @@
 }
 
 .pro_error-message {
-  color: red; /* 에러 메시지 색상 */
-  font-size: 12px; /* 글자 크기 */
-  text-align: center; /* 가운데 정렬 */
-  margin-top: 20px; /* 입력창과의 간격 */
+  color: red;
+  /* 에러 메시지 색상 */
+  font-size: 12px;
+  /* 글자 크기 */
+  text-align: center;
+  /* 가운데 정렬 */
+  margin-top: 20px;
+  /* 입력창과의 간격 */
 }

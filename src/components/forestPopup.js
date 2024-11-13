@@ -7,6 +7,7 @@ import ReportPopup from './reportPopup';
 import { jwtDecode } from 'jwt-decode';
 import { Viewer } from '@toast-ui/react-editor';
 import defaultImage from '../assets/images/default.png';
+import MoonerPopup from '../pages/mypage/follow/moonerPopup';
 
 const ForestPopup = ({ diary_id, onClose }) => {
     const [diary, setDiary] = useState(null);
@@ -22,7 +23,15 @@ const ForestPopup = ({ diary_id, onClose }) => {
     const [likedCount, setLikedCount] = useState(0);
     const [userProfile, setUserProfile] = useState({ user_nick: '', profile_img: '' });
     const [diaryLoading, setDiaryLoading] = useState(true);
+    const [isPopupVisible, setIsPopupVisible] = useState(false);
 
+    const handleProfileClick = () => {
+        setIsPopupVisible(true); // 프로필 클릭 시 MoonerPopup을 표시
+    };
+
+    const handleClosePopup = () => {
+        setIsPopupVisible(false); // 팝업 닫기
+    };
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -391,10 +400,15 @@ const ForestPopup = ({ diary_id, onClose }) => {
             <div className="forest-popup" onClick={handleBackgroundClick}>
                 <div className="forest-popup__content">
                     <div className='forest-popup__header'>
-                        <div className='forest-popup__header-left'>
-                            <img src={diary?.User?.Profile?.profile_img || defaultImage} alt={`${diary?.User?.user_nick || 'User'}'s profile`} className="forest-popup__author-profile-image" />
+                        <div className='forest-popup__header-left' onClick={handleProfileClick}>
+                            <img
+                                src={diary?.User?.Profile?.profile_img || defaultImage}
+                                alt={`${diary?.User?.user_nick || 'User'}'s profile`}
+                                className="forest-popup__author-profile-image"
+                            />
                             <p className="forest-popup__author-nickname">{diary?.User?.user_nick || 'User'}님</p>
                         </div>
+                        {isPopupVisible && <MoonerPopup />}
                         <div className="forest-popup__header-right">
                             <button className="forest-popup__report-button" onClick={handleReportButtonClick}>
                                 <img src={sirenIcon} alt="Report icon" />

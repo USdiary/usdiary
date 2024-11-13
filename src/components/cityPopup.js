@@ -94,7 +94,6 @@ const CityPopup = ({ diary_id, onClose }) => {
             try {
                 const response = await axios.get(`https://api.usdiary.site/contents/${diary_id}/todos`, {
                     headers: token ? { Authorization: `Bearer ${token}` } : {},
-                    timeout: 10000,
                 });
     
                 const data = response.data?.data || [];  // 빈 배열 처리
@@ -129,7 +128,6 @@ const CityPopup = ({ diary_id, onClose }) => {
             try {
                 const response = await axios.get(`https://api.usdiary.site/contents/${diary_id}/routines`, {
                     headers: token ? { Authorization: `Bearer ${token}` } : {},
-                    timeout: 10000,
                 });
     
                 const data = response.data?.data || null; // 데이터가 없으면 null 처리
@@ -375,6 +373,7 @@ const CityPopup = ({ diary_id, onClose }) => {
 
     const showChecklistSection = hasTodos || hasRoutines;
 
+    /*
     const toggleLike = async (e) => {
         e.stopPropagation();
         try {
@@ -385,7 +384,7 @@ const CityPopup = ({ diary_id, onClose }) => {
         } catch (error) {
             console.error('Failed to update like status', error);
         }
-    };
+    }; */
 
 
     const EmptyHeart = () => (
@@ -413,7 +412,7 @@ const CityPopup = ({ diary_id, onClose }) => {
                             <button className="city-popup__report-button" onClick={handleReportButtonClick}>
                                 <img src={sirenIcon} alt="Report" />
                             </button>
-                            <span className="city-popup__like-button" onClick={toggleLike}>
+                            <span className="city-popup__like-button">
                                 {liked ? <FilledHeart /> : <EmptyHeart />}
                             </span>
                         </div>

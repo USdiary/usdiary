@@ -1,100 +1,59 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
+import React, { useState } from 'react';
 import '../../../assets/css/moonerPopup.css';
 import DiaryCard from '../../../components/diaryCard';
 import exit from '../../../assets/images/exit.png';
+import defaultProfileImg from '../../../assets/images/default.png';
+import moonerphoto1 from '../../../assets/images/moonerphoto1.jpg';
+import moonerphoto2 from '../../../assets/images/moonerphoto2.jpg';
+import moonerphoto3 from '../../../assets/images/moonerphoto3.jpg';
 
-const MoonerPopup = ({ follower, onClose }) => {
+const MoonerPopup = () => {
+    const [isOpen, setIsOpen] = useState(true); // 팝업 상태 관리
+
+    const [diaries, setDiaries] = useState([
+        {
+            diary_id: 1,
+            diary_title: "산책으로 시작한 11월",
+            createdAt: "2024-11-01",
+            diary_content: "11월인데 날씨가 너무 따뜻해!! 11월에도 산책을 할 수 있다니..",
+            post_photo: moonerphoto1,
+        },
+        {
+            diary_id: 2,
+            diary_title: "고양이랑 함께한 할로윈",
+            createdAt: "2024-10-31",
+            diary_content: "오늘은 우동이와 함께한 첫 할로윈이다. 유령 우동이가 너무 ..",
+            post_photo: moonerphoto2,
+        },
+        {
+            diary_id: 3,
+            diary_title: "뚜벅뚜벅 카페투어",
+            createdAt: "2024-10-06",
+            diary_content: "까눌레가 너무 먹고싶어서 무작정 떠났다!! 근데 완전 맛집을..",
+            post_photo: moonerphoto3,
+        },
+    ]);
+
+    const [pinCount] = useState(3);
+    const [btnText, setBtnText] = useState('무너맺기');
+
+    const follower = {
+        friend_profile_img: defaultProfileImg,
+        friend_nick: "OO님",
+        user_tendency: "1",
+    };
+
+    /*
+    const MoonerPopup = ({ follower, onClose }) => {
     const [diaries, setDiaries] = useState([]);
-    const [pinCount, setPinCount] = useState(0);
-    const [relationship, setRelationship] = useState(null); // 초기 상태를 null로 설정
-    const [btnText, setBtnText] = useState('');
-    const [sign_id, setSignId] = useState(null);
+    const [pinCount, setPinCount] = useState(0); // 핀의 개수를 상태로 관리
+    const [relationship, setRelationship] = useState(true);
+    const [btnText, setBtnText] = useState(relationship ? '무너' : '무너 맺기');
+    const handleDiaryClick = (diaryId) => {
+        console.log('Diary clicked with ID:', diaryId);
+    };
+    */
 
-    // JWT에서 sign_id를 가져와 설정
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-
-        if (token) {
-            try {
-                const decoded = jwtDecode(token);
-                const savedSignId = decoded.sign_id;
-                if (savedSignId) {
-                    setSignId(savedSignId);
-                }
-            } catch (error) {
-                console.error("Invalid token", error);
-            }
-        }
-    }, []);
-
-    // 팔로우 상태를 가져오는 함수
-    useEffect(() => {
-        const fetchRelationshipStatus = async () => {
-            if (sign_id && follower.User) {
-                try {
-                    // 두 API를 병렬로 호출
-                    const [followersResponse, followingsResponse] = await Promise.all([
-                        axios.get(`https://api.usdiary.site/friends/${sign_id}/followers`, {
-                            params: { friend_id: follower.User }
-                        }),
-                        axios.get(`https://api.usdiary.site/friends/${sign_id}/followings`, {
-                            params: { friend_id: follower.User }
-                        })
-                    ]);
-
-                    // 관계 상태 확인
-                    let relationshipStatus = null;
-                    let relationshipText = '';
-
-                    // followers에서 관계 상태 확인
-                    const isFollower = followersResponse.data.some(f => f.User === follower.User);
-                    const isFollowing = followingsResponse.data.some(f => f.User === follower.User);
-
-                    if (isFollower && isFollowing) {
-                        relationshipStatus = 'accepted'; // 'friend' -> 'accepted'
-                        relationshipText = '무너 승인됨';
-                    } else if (isFollower) {
-                        relationshipStatus = 'pending'; // 'requested' -> 'pending'
-                        relationshipText = '무너 신청 중';
-                    } else if (isFollowing) {
-                        relationshipStatus = 'rejected'; // 'accepted' -> 'rejected'
-                        relationshipText = '무너 거부됨';
-                    } else {
-                        relationshipStatus = null; // 'none' -> null (기본값 없이 null 허용)
-                        relationshipText = '무너맺기';
-                    }
-
-                    setRelationship(relationshipStatus);
-                    setBtnText(relationshipText);
-
-                } catch (error) {
-                    console.error("Error fetching relationship status:", error);
-                }
-            }
-        };
-
-        fetchRelationshipStatus();
-    }, [sign_id, follower.User]);
-
-    // 일기 데이터 가져오기
-    useEffect(() => {
-        const fetchDiaries = async () => {
-            try {
-                const response = await axios.get(`https://api.usdiary.site/friends/search/nickname`);
-                const data = response.data.data;
-                setDiaries(data.recent_diaries);
-                setPinCount(data.recent_diaries.length);
-            } catch (error) {
-                console.error('Error fetching diary data:', error);
-            }
-        };
-
-        fetchDiaries();
-    }, []);
-
-    // 게시판 이름 변환 함수
     const getBoardText = (tendencyName) => {
         switch (tendencyName) {
             case "1":
@@ -108,88 +67,65 @@ const MoonerPopup = ({ follower, onClose }) => {
         }
     };
 
-    // 일기 클릭 핸들러
     const handleDiaryClick = (diaryId) => {
         console.log('Diary clicked with ID:', diaryId);
     };
 
-    // 팔로우/언팔로우 버튼 클릭 핸들러
-    const handleFollowClick = async () => {
+    const handleFollowClick = () => {
         if (btnText === '무너 승인됨') {
-            await deleteFollowing(); // 팔로잉 삭제
             setBtnText('무너맺기');
         } else if (btnText === '무너맺기') {
-            await followUser(); // 팔로우 요청
             setBtnText('무너 신청 중');
         } else if (btnText === '무너 신청 중') {
-            await rejectUser(); // 요청 거부
             setBtnText('무너맺기');
         } else if (btnText === '무너 거부됨') {
-            await removeFriend(); // 친구 제거
             setBtnText('무너맺기');
         }
     };
 
-    // 팔로우 요청
-    const followUser = async () => {
+    /*const handleClick = () => {
+        if (btnText === '무너') {
+          setBtnText('무너맺기');
+          updateRelationship(false); // 무너에서 무너맺기로 상태 전환 시 false로 설정
+        } else if (btnText === '무너맺기') {
+          setBtnText('무너 신청 중');
+          updateRelationship(true); // 무너맺기에서 무너 신청 중으로 상태 전환 시 true로 설정
+        }
+    }
+    
+    const updateRelationship = async (newRelationshipStatus) => {
         try {
             await axios.post(`https://api.usdiary.site/friends/follow-request`, {
                 requested_sign_id: follower.User,
             });
-            setRelationship('pending');
+            setRelationship(newRelationshipStatus);
+            console.log('서버로 관계 상태 전송 성공:', newRelationshipStatus);
         } catch (error) {
-            console.error("Error following user:", error);
+            console.error('서버로 관계 상태 전송 실패:', error);
         }
+    };
+    useEffect(() => {
+        // 서버에서 다이어리 데이터와 핀의 개수를 가져오는 함수
+        const fetchDiaries = async () => {
+            try {
+                const response = await fetch(`https://api.usdiary.site/friends/search/nickname`); // 서버 API 경로
+                const data = await response.json();
+                setDiaries(data.diaries); // 서버에서 받은 다이어리 데이터
+                setPinCount(data.pinCount); // 서버에서 받은 핀의 개수
+    }, []);
+    */
+
+    const handleClose = () => {
+        setIsOpen(false); // 팝업 닫기
     };
 
-    // 팔로잉 삭제
-    const deleteFollowing = async () => {
-        try {
-            await axios.delete(`https://api.usdiary.site/friends/${sign_id}/followings`, {
-                data: {
-                    sign_id: sign_id,
-                    follower_sign_id: follower.User,
-                }
-            });
-            setRelationship(null); // 팔로잉을 삭제하면 관계 상태를 null로 설정
-        } catch (error) {
-            console.error("Error deleting following:", error);
-        }
-    };
-
-    // 요청 거부
-    const rejectUser = async () => {
-        try {
-            await axios.delete(`https://api.usdiary.site/friends/follow-request`, {
-                data: {
-                    requested_sign_id: follower.User,
-                }
-            });
-            setRelationship('rejected'); // 요청 거부 후 'rejected' 상태로 설정
-        } catch (error) {
-            console.error("Error rejecting user:", error);
-        }
-    };
-
-    // 친구 제거
-    const removeFriend = async () => {
-        try {
-            await axios.delete(`https://api.usdiary.site/friends/remove`, {
-                data: {
-                    friend_sign_id: follower.User,
-                }
-            });
-            setRelationship('rejected'); // 친구를 제거하면 'rejected' 상태로 설정
-        } catch (error) {
-            console.error("Error removing friend:", error);
-        }
-    };
+    if (!isOpen) return null; // isOpen이 false이면 팝업을 렌더링하지 않음
 
     return (
         <div className="mooner-popup-overlay">
             <div className='mooner-popup'>
                 <div className='mooner-popup-content'>
-                    <img src={exit} className="mooner-popup_close" alt="Close popup" onClick={onClose} />
+                    <img src={exit} className="mooner-popup_close" alt="Close popup" onClick={handleClose} />
                     <div className='mooner-popup-profile'>
                         <div className='mooner-popup-profile_friend'>
                             <img src={follower.friend_profile_img} className='mooner-popup-profile_friend_img' alt='profile' />
@@ -205,17 +141,14 @@ const MoonerPopup = ({ follower, onClose }) => {
                                 {pinCount === 0 ? (
                                     <p>고정된 일기가 없습니다</p>
                                 ) : (
-                                    (diaries && diaries.length > 0 ? diaries : []).slice(0, pinCount).map((diary) => (
+                                    diaries.map((diary) => (
                                         <DiaryCard
                                             key={diary.diary_id}
                                             diary_title={diary.diary_title}
                                             createdAt={diary.createdAt}
                                             diary_content={diary.diary_content}
                                             post_photo={diary.post_photo}
-                                            user_tendency={follower.user_tendency}
-                                            friend_nick={follower.user_nick}
-                                            diary_id={diary.diary_id}
-                                            onClick={() => handleDiaryClick(diary.diary_id)}
+                                            handleDiaryClick={() => handleDiaryClick(diary.diary_id)}
                                         />
                                     ))
                                 )}
