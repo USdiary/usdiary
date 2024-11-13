@@ -74,41 +74,48 @@ const CheckList = ({ onBack }) => {
       try {
         const decodedToken = jwtDecode(token);
         setSignId(decodedToken.signId);
+        console.log('Decoded signId:', decodedToken.signId);
       } catch (error) {
         console.error('Error decoding token:', error);
       }
     }
   }, []);
 
-  useEffect(() => {
-    console.log(diary, signId);
-    if (diary && signId) {
-      const fetchRoutinesAndTodos = async () => {
-        try {
-          // 현재 날짜를 YYYY-MM-DD 형식으로 구하기
-          const currentDate = new Date().toISOString().split('T')[0];
+  const fetchRoutinesAndTodos = async () => {
+    const token = localStorage.getItem('token');
+    const currentDate = new Date().toISOString().split('T')[0];
   
-          // 루틴 데이터를 날짜를 기반으로 요청
-          const routinesResponse = await axios.get('https://api.usdiary.site/contents/routines', {
-            params: { date: currentDate }
-          });
-          setRoutines(routinesResponse.data);
+    try {
+      const routinesResponse = await axios.get('https://api.usdiary.site/contents/routines', {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { date: currentDate }
+      });
+      console.log("Routines Response Data:", routinesResponse.data);
+      const fetchedRoutines = Array.isArray(routinesResponse.data.data) 
+        ? routinesResponse.data.data.slice(0, 3) 
+        : [];
+      setRoutines(fetchedRoutines);
   
-          // 할 일 데이터를 날짜를 기반으로 요청
-          const todosResponse = await axios.get('https://api.usdiary.site/contents/todos', {
-            params: { date: currentDate }
-          });
-          setTodos(todosResponse.data);
-          console.log("서버 잘 받아짐요")
-        } catch (error) {
-          console.error('Failed to fetch routines and todos:', error);
-        }
-      };
+      const todosResponse = await axios.get('https://api.usdiary.site/contents/todos', {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { date: currentDate }
+      });
+      console.log("Todos Response Data:", todosResponse.data);
+      const fetchedTodos = Array.isArray(todosResponse.data.data) 
+        ? todosResponse.data.data 
+        : [];
+      setTodos(fetchedTodos);
   
-      fetchRoutinesAndTodos();
+    } catch (error) {
+      console.error('Failed to fetch routines and todos:', error);
     }
-  }, [diary, signId]);
+  };
   
+  useEffect(() => {
+    // 최초 렌더링 시 데이터 가져오기
+    fetchRoutinesAndTodos();
+  }, []); // 처음 한 번만 실행되도록 빈 배열을 넣음
+
   const [showRoutine, setShowRoutine] = useState(false);
   const [showTodo, setShowTodo] = useState(false);
 
@@ -141,6 +148,7 @@ const CheckList = ({ onBack }) => {
   const handlePopupClose = () => {
     setShowRoutine(false);
     setShowTodo(false);
+    fetchRoutinesAndTodos();
   };
 
   // 루틴 제출 핸들러
@@ -192,24 +200,28 @@ const CheckList = ({ onBack }) => {
           </div>
           <hr />
           <div className="checklist-routine-bottom">
-            {routines.map((routine, index) => (
-              <div className="checklist-routine-bottom-box" key={routine.routine_id}>
-                <div className="checklist-routine-bottom-box-toggleSwitch">
-                  <input
-                    type="checkbox"
-                    id={`routine-toggle-${index}`}
-                    hidden
-                    checked={routine.is_completed}
-                    readOnly
-                  />
-                  <label htmlFor={`routine-toggle-${index}`}>
-                    <span></span>
-                  </label>
+            {routines.length > 0 ? (
+              routines.map((routine, index) => (
+                <div className="checklist-routine-bottom-box" key={routine.routine_id}>
+                  <div className="checklist-routine-bottom-box-toggleSwitch">
+                    <input
+                      type="checkbox"
+                      id={`routine-toggle-${index}`}
+                      hidden
+                      checked={routine.is_completed}
+                      readOnly
+                    />
+                    <label htmlFor={`routine-toggle-${index}`}>
+                      <span></span>
+                    </label>
+                  </div>
+                  <div className="checklist-routine-bottom-box-title">{routine.routine_title}</div>
+                  <div className="checklist-routine-bottom-box-content">{routine.description}</div>
                 </div>
-                <div className="checklist-routine-bottom-box-title">{routine.routine_title}</div>
-                <div className="checklist-routine-bottom-box-content">{routine.description}</div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div>루틴이 없습니다.</div> // 데이터가 없을 때의 메시지
+            )}
           </div>
         </div>
 
@@ -221,24 +233,28 @@ const CheckList = ({ onBack }) => {
           </div>
           <hr />
           <div className="checklist-todo-bottom">
-            {todos.map((todo, index) => (
-              <div className="checklist-todo-bottom-box" key={todo.todo_id}>
-                <div className="checklist-todo-bottom-box-toggleSwitch">
-                  <input
-                    type="checkbox"
-                    id={`todo-toggle-${index}`}
-                    hidden
-                    checked={todo.is_completed}
-                    readOnly
-                  />
-                  <label htmlFor={`todo-toggle-${index}`}>
-                    <span></span>
-                  </label>
+            {todos.length > 0 ? (
+              todos.map((todo, index) => (
+                <div className="checklist-todo-bottom-box" key={todo.todo_id}>
+                  <div className="checklist-todo-bottom-box-toggleSwitch">
+                    <input
+                      type="checkbox"
+                      id={`todo-toggle-${index}`}
+                      hidden
+                      checked={todo.is_completed}
+                      readOnly
+                    />
+                    <label htmlFor={`todo-toggle-${index}`}>
+                      <span></span>
+                    </label>
+                  </div>
+                  <div className="checklist-todo-bottom-box-title">{todo.todo_title}</div>
+                  <div className="checklist-todo-bottom-box-content">{todo.description}</div>
                 </div>
-                <div className="checklist-todo-bottom-box-title">{todo.todo_title}</div>
-                <div className="checklist-todo-bottom-box-content">{todo.description}</div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div>루틴이 없습니다.</div> // 데이터가 없을 때의 메시지
+            )}
           </div>
         </div>
 
