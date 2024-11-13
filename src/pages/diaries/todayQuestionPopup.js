@@ -112,7 +112,7 @@ const TodayQuestionPopup = ({ onClose, question_id, initialAnswer, initialPhoto,
         alert('답변이 성공적으로 수정되었습니다.');
       } else {
         // 답변이 존재하지 않으면 POST 요청을 통해 새로 생성
-        const response = await axios.post('https://api.usdiary.site/contents/myanswers', payload, {
+        const response = await axios.post('https://api.usdiary.site/contents/answers', payload, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
