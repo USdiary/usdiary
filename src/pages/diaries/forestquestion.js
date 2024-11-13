@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 import TodayQuestionPopup from "./todayQuestionPopup";
 
@@ -20,13 +21,24 @@ const ForestQuestion = ({ onBack }) => {
   const editorRef = useRef();
 
   const fetchAnswerByDate = async (date) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error("No token found in localStorage.");
+      return;
+    }
+  
     try {
+      // JWT 토큰 디코딩
+      const decodedToken = jwtDecode(token); 
+      const signId = decodedToken.sign_id; // sign_id 추출
+  
       const response = await axios.get('https://api.usdiary.site/contents/answers', {
-        params: { date },
+        params: { date, sign_id: signId },  // sign_id를 포함하여 요청
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
+  
       setInitialAnswer(response.data.data.answer_text || '');
       setInitialPhoto(response.data.data.answer_photo || null);
     } catch (error) {

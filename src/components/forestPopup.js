@@ -60,7 +60,6 @@ const ForestPopup = ({ diary_id, onClose }) => {
         fetchUserProfile();
     }, []);
 
-
     useEffect(() => {
         const token = localStorage.getItem('token');
         const fetchDiaryData = async () => {
@@ -85,26 +84,34 @@ const ForestPopup = ({ diary_id, onClose }) => {
 
         fetchDiaryData();
     }, [diary_id]);
+    
 
     useEffect(() => {
+        if (diaryLoading || !diary || !diary.createdAt) {
+            // diary가 없거나 아직 로딩 중일 경우 return
+            return;
+        }
+    
         const fetchTodayQuestion = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.error("No token found in localStorage.");
+            if (!diary.User?.sign_id) {
+                console.error("No sign_id found in diary.");
                 return;
             }
-
+    
             try {
+                const signId = diary.User?.sign_id;  // 다이어리에서 sign_id를 추출
+                const diaryDate = new Date(diary.createdAt).toISOString().split('T')[0];
+    
                 const response = await axios.get('https://api.usdiary.site/contents/questions/today', {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`, // 토큰은 여전히 필요
                     },
                     params: {
-                        date: new Date().toISOString().split('T')[0] // Ensure it's in the correct format (YYYY-MM-DD)
+                        date: diaryDate,  // 날짜 파라미터로 다이어리 작성 날짜를 보냄
+                        sign_id: signId   // 다이어리의 sign_id를 파라미터에 포함시킴
                     }
                 });
-
-                // API 응답에서 data 객체 내에 있는 값을 활용
+    
                 if (response.data && response.data.data) {
                     setQuestionData(response.data.data.question_text); // 질문 텍스트 설정
                     console.log(response.data.data); // 응답 내용 확인 (디버깅용)
@@ -114,30 +121,39 @@ const ForestPopup = ({ diary_id, onClose }) => {
                 alert('질문을 불러오는 데 실패했습니다.');
             }
         };
-
+    
         fetchTodayQuestion();
-    }, []);
-
+    }, [diary, diaryLoading]); // diary가 로딩되면 질문을 가져옴
+    
+    // 세 번째 useEffect: 다이어리가 로딩된 후 답변을 불러오는 함수
     useEffect(() => {
+        if (diaryLoading || !diary || !diary.createdAt) {
+            // diary가 없거나 아직 로딩 중일 경우 return
+            return;
+        }
+    
         const fetchAnswerData = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.error("No token found in localStorage.");
+            if (!diary.diary_id) {
+                console.error("No diary_id found in diary.");
                 return;
             }
-
-            const todayDate = new Date().toISOString().split('T')[0]; // 오늘 날짜를 YYYY-MM-DD 형식으로 가져옴
-
+    
             try {
+                const diaryId = diary.diary_id;  // 다이어리에서 diary_id를 추출
+                const diaryDate = new Date(diary.createdAt).toISOString().split('T')[0];
+                console.log("Diary ID:", diaryId);
+                console.log("Diary Date:", diaryDate);
+    
+                // diary_id와 date만을 쿼리 파라미터로 전달
                 const response = await axios.get('https://api.usdiary.site/contents/answers', {
-                    headers: { Authorization: `Bearer ${token}` },
                     params: {
-                        date: todayDate // 날짜 파라미터로 오늘 날짜를 보냄
+                        date: diaryDate, // 날짜 파라미터로 다이어리 작성 날짜를 보냄
+                        diary_id: diaryId  // diary_id를 파라미터에 포함시킴
                     }
                 });
-
+    
                 const data = response.data?.data;
-
+    
                 if (data) {
                     setAnswerData({
                         answer_text: data.answer_text,
@@ -154,17 +170,16 @@ const ForestPopup = ({ diary_id, onClose }) => {
                     setAnswerData(null); // 답변을 찾을 수 없는 경우 빈 상태로 설정
                     console.error('Answer not found:', error);
                 } else {
-                    console.error('Error fetching answer data:', error); // 서버 오류는 콘솔에만 표시
+                    console.error('Error fetching answer data:', error);
                 }
             } finally {
                 setLoading(false);
             }
         };
-
+    
         fetchAnswerData();
-    }, []);
-
-
+    }, [diary, diaryLoading]);
+    
     // Comments data fetch
     useEffect(() => {
         // userProfile.user_nick이 설정된 이후에만 comments를 가져옴

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import '../../assets/css/forestquestion.css';
+import { jwtDecode } from 'jwt-decode';
 
 const TodayQuestionPopup = ({ onClose, question_id, initialAnswer, initialPhoto, onDelete }) => {
   const [question, setQuestion] = useState(null);
@@ -8,6 +9,19 @@ const TodayQuestionPopup = ({ onClose, question_id, initialAnswer, initialPhoto,
   const [answer_photo, setPhoto] = useState(initialPhoto || null);  // 변경된 변수
   const fileInputRef = useRef(null);
   const [answer_id, setAnswerId] = useState(null);
+  const [signId, setSignId] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        try {
+            const decodedToken = jwtDecode(token);
+            setSignId(decodedToken.sign_id);
+        } catch (error) {
+            console.error('Failed to decode token:', error);
+        }
+    }
+}, []);
 
   useEffect(() => {
     const fetchTodayQuestion = async () => {
@@ -43,13 +57,15 @@ const TodayQuestionPopup = ({ onClose, question_id, initialAnswer, initialPhoto,
 
   useEffect(() => {
     const fetchTodayAnswer = async () => {
+      if (!signId) return; // sign_id가 없으면 API 요청을 하지 않음
+
       try {
         // 오늘 날짜를 YYYY-MM-DD 형식으로 설정
         const todayDate = new Date().toISOString().split('T')[0];
         
         // 특정 날짜의 답변을 조회하는 GET 요청
         const response = await axios.get('https://api.usdiary.site/contents/answers', {
-          params: { date: todayDate },
+          params: { date: todayDate, sign_id: signId }, // sign_id 추가
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -72,14 +88,17 @@ const TodayQuestionPopup = ({ onClose, question_id, initialAnswer, initialPhoto,
     };
 
     fetchTodayAnswer();
-  }, []);
+  }, [signId]);
 
+  
   const handleSave = async () => {
     try {
       const date = new Date().toISOString().split('T')[0];
+
       const payload = {
         answer_text,  // 답변 텍스트
-        date  // 날짜
+        date,  // 날짜
+        sign_id: signId 
       };
 
       if (answer_id) {
