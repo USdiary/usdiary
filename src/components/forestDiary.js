@@ -232,8 +232,9 @@ const ForestComponent = () => {
       formData.append('diary_content', updatedDiary.diary_content);
       formData.append('access_level', updatedDiary.access_level);
       formData.append('post_photo', updatedDiary.post_photo);
-
+      const token = localStorage.getItem('token');
       const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
+        headers: { Authorization: `Bearer ${token}` },
         method: 'PATCH',
         body: formData,
       });
@@ -250,9 +251,11 @@ const ForestComponent = () => {
   };
 
   const handleDelete = async () => {
+    const token = localStorage.getItem('token');
     try {
       const response = await fetch(`https://api.usdiary.site/diaries/${diary.diary_id}`, {
         method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (response.status === 204) {
         console.log('삭제 완료');
