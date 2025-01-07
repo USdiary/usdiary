@@ -4,35 +4,73 @@ import '../../../assets/css/follow.css';
 
 import exit from '../../../assets/images/exit.png';
 import search from '../../../assets/images/search.png';
+import basicprofileimg from '../../../assets/images/basicprofileimg.png';
 
 const SearchMooner = ({ onClose }) => {
     const [searchText, setSearchText] = useState('');
-    const [entireUsers, setEntireUsers] = useState([]); // 검색된 유저 저장용
+    const [userInfo, setUserInfo] = useState(null); // 유저 정보 상태 저장
 
     const handleInputChange = (event) => {
         setSearchText(event.target.value);
     };
 
     // 검색 API 호출 함수
-    const fetchUsers = async () => {
-        if (searchText.trim() === '') return;
+    const fetchUser = async () => {
+        const trimmedText = searchText.trim();
+        if (trimmedText === '') return;
+    
         try {
-            const response = await axios.get(`https://api.usdiary.site/friends/search?user_nick=${searchText}`);
-            setEntireUsers(response.data);
+            // API 요청 시 searchText를 쿼리 파라미터로 전달
+            const response = await axios.get(
+                `https://api.usdiary.site/friends/search/nickname`,
+                { params: { user_nick: trimmedText } }
+            );
+    
+            console.log('API Response:', response.data); // 응답 전체 확인
+    
+            const data = response.data.data; // data를 명확히 변수로 할당
+            if (!data || !data.user) {
+                console.log('사용자 정보가 없습니다.');
+                setUserInfo(null); // 유저 정보가 없으면 상태 초기화
+                return;
+            }
+    
+            const user = data.user; // user 객체 할당
+    
+            // user 정보를 상태에 저장
+            setUserInfo({
+                user_id: user.user_id,
+                user_nick: user.user_nick,
+                profile_img: user.profile_img || basicprofileimg,
+            });
+    
         } catch (error) {
-            console.error('Error fetching users:', error);
+            console.error('Error fetching user:', error);
+            setUserInfo(null); // 오류 발생 시 상태 초기화
         }
     };
+    
 
     const handleKeyDown = (event) => {
         if (event.key === 'Enter') {
-            fetchUsers();
+            fetchUser();
         }
     };
 
     const handleSearchClick = () => {
-        fetchUsers();
+        fetchUser();
     };
+
+    useEffect(() => {
+        // userInfo 상태가 업데이트될 때마다 콘솔 출력
+        if (userInfo) {
+            console.log('userInfo:', {
+                profile_img: userInfo.profile_img,
+                user_nick: userInfo.user_nick,
+                user_id: userInfo.user_id
+            });
+        }
+    }, [userInfo]); // userInfo 상태가 변경될 때마다 실행
 
     return (
         <div className="mooner_popup-overlay">
@@ -40,30 +78,34 @@ const SearchMooner = ({ onClose }) => {
                 <img src={exit} className="mooner_popup_close" alt="Close popup" onClick={onClose} />
                 <div className='mooner_popup_name'>닉네임으로 무너 찾기</div>
                 <div className='mooner_popup_search-id'>
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         value={searchText}
                         onChange={handleInputChange}
-                        onKeyDown={handleKeyDown} 
+                        onKeyDown={handleKeyDown}
                         placeholder="닉네임 검색"
                         className='mooner_popup_search-id_input'
                     />
-                    <img 
-                        src={search} 
-                        alt="Search icon" 
+                    <img
+                        src={search}
+                        alt="Search icon"
                         onClick={handleSearchClick}
                     />
                 </div>
                 <div className='mooner_popup_box'>
-                    {entireUsers.map((user, index) => (
-                        <div key={index} className='profile-follow_box_content_box_friend'>
-                            <img src={user.image} className='profile-follow_box_content_box_friend_img' alt='profile' />
+                    {userInfo && (
+                        <div className='profile-follow_box_content_box_friend'>
+                            <img
+                                src={userInfo.profile_img}
+                                className='profile-follow_box_content_box_friend_img'
+                                alt='profile'
+                            />
                             <div className='profile-follow_box_content_box_friend_text'>
-                                <div className='profile-follow_box_content_box_friend_text_nickname'>{user.nickname}</div>
-                                <div className='profile-follow_box_content_box_friend_text_id'>{user.id}</div>
+                                <div className='profile-follow_box_content_box_friend_text_nickname'>{userInfo.user_nick}</div>
+                                <div className='profile-follow_box_content_box_friend_text_id'>{userInfo.user_id}</div>
                             </div>
                         </div>
-                    ))}
+                    )}
                 </div>
             </div>
         </div>
