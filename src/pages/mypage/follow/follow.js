@@ -43,28 +43,87 @@ const Follow = () => {
     }, []);
 
     const handleSearchFollowers = async () => {
-        if (!sign_id) return;
+        if (!sign_id) {
+            console.error("Sign ID가 설정되지 않았습니다.");
+            return;
+        }
+    
+        const token = localStorage.getItem('token'); // 토큰 가져오기
+    
+        if (!token) {
+            console.error("토큰이 없습니다. 요청을 중단합니다.");
+            return;
+        }
+    
         try {
             const response = await axios.get(`https://api.usdiary.site/friends/${sign_id}/followers`, {
-                params: { friend_nick: followersSearchTerm },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                params: { sign_id: followersSearchTerm },
             });
-            setFollowers(response.data);
+        
+            if (response.status === 404) {
+                console.log("해당하는 팔로워가 없습니다.");
+            } else if (response.data.message === "Follower list retrieved successfully") {
+                const followers = response.data.data;
+                if (followers.length === 0) {
+                    console.log("팔로워 없음");
+                }
+                setFollowers(followers);
+            } else {
+                console.error("Error in fetching followers:", response.data.message);
+            }
         } catch (error) {
-            console.error('Error fetching followers:', error);
+            if (error.response && error.response.status === 404) {
+                console.error("해당 팔로워가 존재하지 않습니다.");
+            } else {
+                console.error("Error fetching followers:", error);
+            }
         }
     };
 
     const handleSearchFollowings = async () => {
-        if (!sign_id) return;
+        if (!sign_id) {
+            console.error("Sign ID가 설정되지 않았습니다.");
+            return;
+        }
+    
+        const token = localStorage.getItem('token'); // 토큰 가져오기
+    
+        if (!token) {
+            console.error("토큰이 없습니다. 요청을 중단합니다.");
+            return;
+        }
+    
         try {
             const response = await axios.get(`https://api.usdiary.site/friends/${sign_id}/followings`, {
-                params: { friend_nick: followingsSearchTerm },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                params: { sign_id: followingsSearchTerm },
             });
-            setFollowings(response.data);
+        
+            if (response.status === 404) {
+                console.log("해당하는 팔로잉이 없습니다.");
+            } else if (response.data.message === "Following list retrieved successfully") {
+                const followings = response.data.data;
+                if (followings.length === 0) {
+                    console.log("팔로잉 없음");
+                }
+                setFollowers(followings);
+            } else {
+                console.error("Error in fetching followings:", response.data.message);
+            }
         } catch (error) {
-            console.error('Error fetching followings:', error);
+            if (error.response && error.response.status === 404) {
+                console.error("해당 팔로잉이 존재하지 않습니다.");
+            } else {
+                console.error("Error fetching followings:", error);
+            }
         }
     };
+           
 
     // 엔터 키 감지 및 검색 실행
     const handleKeyDown = (e, isFollower) => {
