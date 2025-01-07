@@ -94,8 +94,9 @@ const Friend = () => {
 
 
                 if (currentPage > calculatedTotalPages) {
-                    setCurrentPage(calculatedTotalPages);
+                    setCurrentPage(Math.max(1, calculatedTotalPages));
                 }
+                
             } catch (error) {
                 if (error.response && error.response.status === 404) {
                     setError('팔로우하는 사용자가 없습니다.');
