@@ -5,7 +5,7 @@ const DiaryFilter = ({ filter, onFilterChange, page }) => {
     const pageColors = {
         forest: '#7E9660',  // Forest 색상
         city: '#828282',    // City 색상
-        friend: '#FF69B4',  // Friend 색상
+        friend: '#75388B',  // Friend 색상
         sea: '#164BB0'      // Sea 색상
     };
 

@@ -58,7 +58,10 @@ const Sea = () => {
                 }
 
                 const { data: { totalDiaries, diary: diariesData } } = response.data;
-                setDiaries(diariesData || []);
+                
+                const filteredDiaries = (diariesData || []).filter(diary => diary.access_level === 0);
+
+                setDiaries(filteredDiaries);
 
                 const calculatedTotalPages = Math.ceil(totalDiaries / diariesPerPage);
                 setTotalPages(calculatedTotalPages || 1);
