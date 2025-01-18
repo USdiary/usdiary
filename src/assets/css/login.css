@@ -31,6 +31,7 @@
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.5s ease-in-out, visibility 0s 0.5s;
+    cursor: pointer;
 }
 
 .menu .logo .logo_us {
@@ -89,21 +90,26 @@
 
 .menu .button #home {
     width: 88px;
+    cursor: pointer;
 }
 
 .menu .button #diary {
     width: 88px;
+    cursor: pointer;
 }
 .menu .button #map {
     width: 62px;
+    cursor: pointer;
 }
 .menu .button #profile {
     width: 103px;
+    cursor: pointer;
 }
 
 .menu .button #alarm {
     width: 29px;
     position: relative;
+    cursor: pointer;
 }
 
 .menu .button #alarm img {
@@ -122,6 +128,7 @@
 .menu .button #logout {
     width: 29px;
     position: relative;
+    cursor: pointer;
 }
 
 .menu .button #logout img {
