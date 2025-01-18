@@ -102,7 +102,7 @@ const SearchMooner = ({ onClose }) => {
                             />
                             <div className='profile-follow_box_content_box_friend_text'>
                                 <div className='profile-follow_box_content_box_friend_text_nickname'>{userInfo.user_nick}</div>
-                                <div className='profile-follow_box_content_box_friend_text_id'>{userInfo.user_id}</div>
+                                <div className='profile-follow_box_content_box_friend_text_id'>{userInfo.sign_id}</div>
                             </div>
                         </div>
                     )}

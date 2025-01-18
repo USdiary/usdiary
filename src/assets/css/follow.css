@@ -109,6 +109,7 @@
     font-size: 15px;
     box-shadow: 0px 4px 4px #B8B8B8;
     font-weight: 600;
+    cursor: pointer;
 }
 
 .wrap .profile-search {
@@ -126,6 +127,7 @@
     font-size: 15px;
     box-shadow: 0px 4px 4px #B8B8B8;
     font-weight: 600;
+    cursor: pointer;
 }
 
 .wrap .profile-request:hover,
@@ -180,6 +182,7 @@
     width: 13px;
     height: 13.66px;
     margin-top: 8px;
+    cursor: pointer;
 }
 
 .wrap .profile-follow_box_content_search input {
@@ -261,6 +264,7 @@
     font-weight: 600;
     color: #7a7a7a;
     margin-left: 20px;
+    cursor: pointer;
 }
 
 .request_refusal {
@@ -268,6 +272,7 @@
     font-weight: 600;
     color: #c95454;
     margin-left: 20px;
+    cursor: pointer;
 }
 
 /* searchMooner.css */
@@ -296,6 +301,7 @@
     float: right;
     width: 21px;
     height: 21px;
+    cursor: pointer;
 }
 
 .mooner_popup_name {
@@ -322,6 +328,7 @@
     height: 17.68px;
     margin: auto;
     margin-right: 22px;
+    cursor: pointer;
 }
 
 .mooner_popup_search-id input {
